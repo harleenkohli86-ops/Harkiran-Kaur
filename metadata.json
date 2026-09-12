@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix HK Code of Rankers",
+  "description": "Premium brand mentorship platform, course tracking dashboard, and community forum for Company Secretary (CS) aspirants by Harkiran Kaur.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

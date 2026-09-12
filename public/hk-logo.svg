@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Rich 3D Gold Gradients -->
+    <linearGradient id="goldBevel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF6D6" />
+      <stop offset="20%" stop-color="#F5D77F" />
+      <stop offset="45%" stop-color="#D4AF37" />
+      <stop offset="70%" stop-color="#AA8022" />
+      <stop offset="90%" stop-color="#E5C158" />
+      <stop offset="100%" stop-color="#78550E" />
+    </linearGradient>
+
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF9E6" />
+      <stop offset="40%" stop-color="#F3D078" />
+      <stop offset="100%" stop-color="#C8A45D" />
+    </linearGradient>
+
+    <linearGradient id="goldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B58A28" />
+      <stop offset="50%" stop-color="#856012" />
+      <stop offset="100%" stop-color="#523B0A" />
+    </linearGradient>
+
+    <linearGradient id="goldStarLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF0" />
+      <stop offset="50%" stop-color="#FFDF73" />
+      <stop offset="100%" stop-color="#DDAF35" />
+    </linearGradient>
+
+    <linearGradient id="goldStarDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C89B2B" />
+      <stop offset="100%" stop-color="#7A580F" />
+    </linearGradient>
+
+    <!-- Warm Ivory Enamel Radial -->
+    <radialGradient id="ivoryEnamel" cx="45%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#FAF6EE" />
+      <stop offset="85%" stop-color="#F0E6D2" />
+      <stop offset="100%" stop-color="#DECFAF" />
+    </radialGradient>
+
+    <!-- Drop Shadow for 3D Elements -->
+    <filter id="drop3D" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+
+    <filter id="subtle3D" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+
+    <filter id="rimGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#C8A45D" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Outer Black Boundary Layer -->
+  <circle cx="250" cy="250" r="248" fill="#0A0A0A" />
+
+  <!-- 3D Beveled Outer Gold Rim -->
+  <circle cx="250" cy="250" r="240" fill="none" stroke="url(#goldBevel)" stroke-width="16" filter="url(#rimGlow)" />
+  <circle cx="250" cy="250" r="232" fill="none" stroke="#5C410B" stroke-width="2" />
+  <circle cx="250" cy="250" r="248" fill="none" stroke="#FFF2B2" stroke-width="1.5" opacity="0.7" />
+
+  <!-- Inner Recessed Ivory Disc -->
+  <circle cx="250" cy="250" r="228" fill="url(#ivoryEnamel)" />
+  <circle cx="250" cy="250" r="228" fill="none" stroke="#B8923A" stroke-width="2.5" opacity="0.6" />
+  <circle cx="250" cy="250" r="220" fill="none" stroke="#E5D5B5" stroke-width="1" opacity="0.8" />
+
+  <!-- Left Golden Crescent Accent -->
+  <path d="M 85 250 C 85 145 145 95 205 85 C 135 110 102 165 102 250 C 102 335 140 390 210 412 C 145 400 85 350 85 250 Z"
+        fill="url(#goldBevel)" filter="url(#subtle3D)" />
+
+  <!-- The Black 'H' Monogram with Elegant Serifs -->
+  <g filter="url(#drop3D)">
+    <!-- Left Vertical Pillar with Serifs -->
+    <path d="M 132 108 L 194 108 L 194 122 L 180 122 L 180 274 L 194 274 L 194 288 L 132 288 L 132 274 L 146 274 L 146 122 L 132 122 Z" fill="#111111" />
+    
+    <!-- Right Vertical Pillar (Upper portion) -->
+    <path d="M 224 108 L 286 108 L 286 122 L 272 122 L 272 195 L 238 195 L 238 122 L 224 122 Z" fill="#111111" />
+    
+    <!-- Horizontal Crossbar connecting Pillars -->
+    <path d="M 178 180 L 240 180 L 240 208 L 178 208 Z" fill="#111111" />
+  </g>
+
+  <!-- Golden Upward Dynamic Swoosh connecting H to K and Star -->
+  <path d="M 140 292 C 185 240 235 185 290 135 C 325 102 360 78 375 68 L 362 62 C 322 88 275 130 220 185 C 172 232 135 282 132 295 Z"
+        fill="url(#goldBevel)" filter="url(#drop3D)" />
+
+  <!-- 3D Metallic Gold 'K' Monogram -->
+  <!-- Upper Right Diagonal Arm of K -->
+  <g filter="url(#drop3D)">
+    <!-- Light Facet -->
+    <polygon points="242,192 355,80 372,92 258,206" fill="url(#goldLight)" />
+    <!-- Dark/Bevel Facet -->
+    <polygon points="258,206 372,92 376,98 252,216" fill="url(#goldDark)" />
+  </g>
+
+  <!-- Lower Right Diagonal Arm of K -->
+  <g filter="url(#drop3D)">
+    <!-- Light Facet -->
+    <polygon points="250,202 388,300 376,312 238,218" fill="url(#goldLight)" />
+    <!-- Dark/Bevel Facet -->
+    <polygon points="238,218 376,312 368,322 232,228" fill="url(#goldDark)" />
+  </g>
+
+  <!-- 3D Faceted Gold Star at the Summit -->
+  <g transform="translate(358, 56) rotate(12)" filter="url(#drop3D)">
+    <!-- 5 Points with alternating light and shaded facets for genuine 3D look -->
+    <!-- Top Point -->
+    <polygon points="0,0 0,-34 7,-10" fill="url(#goldStarLight)" />
+    <polygon points="0,0 0,-34 -7,-10" fill="url(#goldStarDark)" />
+    <!-- Top-Right Point -->
+    <polygon points="0,0 32,-11 11,2" fill="url(#goldStarLight)" />
+    <polygon points="0,0 32,-11 10,-8" fill="url(#goldStarDark)" />
+    <!-- Bottom-Right Point -->
+    <polygon points="0,0 20,28 3,12" fill="url(#goldStarLight)" />
+    <polygon points="0,0 20,28 17,4" fill="url(#goldStarDark)" />
+    <!-- Bottom-Left Point -->
+    <polygon points="0,0 -20,28 -17,4" fill="url(#goldStarLight)" />
+    <polygon points="0,0 -20,28 -3,12" fill="url(#goldStarDark)" />
+    <!-- Top-Left Point -->
+    <polygon points="0,0 -32,-11 -10,-8" fill="url(#goldStarLight)" />
+    <polygon points="0,0 -32,-11 -11,2" fill="url(#goldStarDark)" />
+  </g>
+
+  <!-- Open Book & Mentor Helping Student (The Core Philosophy Graphic) -->
+  <g filter="url(#drop3D)" transform="translate(0, -6)">
+    <!-- Open Book Base & Stepped Pages -->
+    <!-- Left Pages Fan -->
+    <path d="M 160 365 C 215 348 248 358 248 374 L 168 392 C 215 372 248 378 248 386 Z" fill="#1C1A17" />
+    <path d="M 156 368 C 215 350 248 360 248 376 L 248 382 C 215 365 158 374 158 374 Z" fill="url(#goldLight)" opacity="0.8" />
+
+    <!-- Right Pages Fan -->
+    <path d="M 340 365 C 285 348 252 358 252 374 L 332 392 C 285 372 252 378 252 386 Z" fill="#1C1A17" />
+    <path d="M 344 368 C 285 350 252 360 252 376 L 252 382 C 285 365 342 374 342 374 Z" fill="url(#goldDark)" opacity="0.8" />
+
+    <!-- Book Spine Ribbons in Gold -->
+    <path d="M 246 370 Q 250 362 254 370 L 254 394 Q 250 388 246 394 Z" fill="url(#goldBevel)" />
+
+    <!-- Mentor (Standing Tall in Shining Gold on Left Step, reaching down) -->
+    <!-- Head -->
+    <circle cx="218" cy="250" r="10" fill="url(#goldLight)" />
+    <!-- Body & Torso Leaning Forward -->
+    <path d="M 218 262 L 202 312 L 222 312 L 228 274 Z" fill="url(#goldBevel)" />
+    <!-- Extended Helping Right Arm & Hand -->
+    <path d="M 224 270 L 254 286 L 250 292 L 220 276 Z" fill="url(#goldLight)" />
+    <!-- Left Leg on Book Step -->
+    <path d="M 206 312 L 198 348 L 210 348 L 216 312 Z" fill="url(#goldDark)" />
+    <!-- Right Leg Stepping Forward -->
+    <path d="M 220 312 L 228 344 L 238 344 L 226 312 Z" fill="url(#goldBevel)" />
+
+    <!-- Student (Climbing Upwards in Onyx Black on Right Step, taking mentor's hand) -->
+    <!-- Head -->
+    <circle cx="282" cy="285" r="8.5" fill="#111111" />
+    <!-- Body & Torso in Striving Pose -->
+    <path d="M 280 295 L 292 334 L 274 334 L 272 304 Z" fill="#111111" />
+    <!-- Reaching Left Arm meeting Mentor's Hand -->
+    <path d="M 274 300 L 252 288 L 250 294 L 270 306 Z" fill="#111111" />
+    <!-- Kneeling / Climbing Right Leg on Lower Book Page -->
+    <path d="M 290 334 L 302 360 L 288 360 L 278 334 Z" fill="#111111" />
+    <!-- Left Knee Stepping on Upper Page -->
+    <path d="M 274 334 L 262 352 L 254 352 L 268 334 Z" fill="#111111" />
+  </g>
+
+  <!-- Bottom Arched High-Contrast 3D Text: "CODE OF RANKERS" -->
+  <path id="textArch" d="M 90 330 A 185 185 0 0 0 410 330" fill="none" />
+  <text font-family="'Montserrat', 'Cinzel', 'Arial Black', sans-serif" font-size="24" font-weight="900" letter-spacing="5" filter="url(#subtle3D)">
+    <textPath href="#textArch" startOffset="50%" text-anchor="middle">
+      <tspan fill="#141414" font-weight="900">CODE OF </tspan>
+      <tspan fill="url(#goldDark)" font-weight="900">RANKERS</tspan>
+    </textPath>
+  </text>
+</svg>
