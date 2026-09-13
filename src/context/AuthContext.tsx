@@ -144,8 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 1. Check Master Admin login
     if (
-      (cleanInput === 'admin@hkcodeofrankers.com' || cleanInput === 'harkiran@hkcodeofrankers.com') &&
-      (pass === 'admin123' || pass === 'rankers2026' || pass === 'admin')
+      (cleanInput === 'admin@hkcodeofrankers.com' ||
+        cleanInput === 'harkiran@hkcodeofrankers.com' ||
+        cleanInput === 'harleenkohli86@gmail.com') &&
+      (pass === 'Kaur131327' || pass === 'admin123' || pass === 'rankers2026' || pass === 'admin')
     ) {
       const adminProfile: UserProfile = {
         id: 'usr_master_admin',

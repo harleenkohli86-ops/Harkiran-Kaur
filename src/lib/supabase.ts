@@ -266,9 +266,11 @@ export async function checkMasterAdminSlotStatus(): Promise<{
       const parsed = JSON.parse(localAdmin);
       const cleanName = (parsed.name || '').includes('Harshita') ? 'Harkiran Kaur' : (parsed.name || 'Harkiran Kaur');
       const cleanEmail = (parsed.email || '').includes('harshita') ? 'admin@hkcodeofrankers.com' : (parsed.email || 'admin@hkcodeofrankers.com');
-      if (parsed.name !== cleanName || parsed.email !== cleanEmail) {
+      const targetHash = btoa('Kaur131327');
+      if (parsed.name !== cleanName || parsed.email !== cleanEmail || parsed.password_hash !== targetHash) {
         parsed.name = cleanName;
         parsed.email = cleanEmail;
+        parsed.password_hash = targetHash;
         localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(parsed));
       }
       return {
@@ -286,32 +288,73 @@ export async function checkMasterAdminSlotStatus(): Promise<{
   try {
     const { data, error } = await supabase
       .from('admin_accounts')
-      .select('name, email, created_at')
+      .select('*')
       .limit(1);
 
     if (!error && data && data.length > 0) {
+      const dbAdmin = data[0];
+      const targetHash = btoa('Kaur131327');
+      // If password in DB doesn't match Kaur131327, try updating it
+      if (dbAdmin.password_hash !== targetHash) {
+        try {
+          await supabase
+            .from('admin_accounts')
+            .update({ password_hash: targetHash })
+            .eq('id', dbAdmin.id);
+        } catch (updateErr) {
+          console.warn('Could not auto-update dbAdmin password hash:', updateErr);
+        }
+      }
+
       // Sync to local for offline resilience
       localStorage.setItem(
         ADMIN_STORAGE_KEY,
         JSON.stringify({
-          name: data[0].name,
-          email: data[0].email,
-          phone: '',
-          created_at: data[0].created_at,
+          name: dbAdmin.name || 'Harkiran Kaur',
+          email: dbAdmin.email || 'admin@hkcodeofrankers.com',
+          phone: dbAdmin.phone || '+91 92840 84523',
+          password_hash: targetHash,
+          created_at: dbAdmin.created_at,
+          role: 'master_admin',
         })
       );
       return {
         claimed: true,
-        adminEmail: data[0].email,
-        adminName: data[0].name,
-        created_at: data[0].created_at,
+        adminEmail: dbAdmin.email,
+        adminName: dbAdmin.name,
+        created_at: dbAdmin.created_at,
       };
     }
   } catch (e) {
     console.warn('Supabase admin check notice:', e);
   }
 
-  return { claimed: false };
+  // Fallback: If no admin exists yet in local or Supabase, seed default Master Admin with password Kaur131327
+  const targetHash = btoa('Kaur131327');
+  const defaultAdmin: AdminAccount = {
+    name: 'Harkiran Kaur',
+    email: 'admin@hkcodeofrankers.com',
+    phone: '+91 92840 84523',
+    password_hash: targetHash,
+    recovery_pin: '131327',
+    created_at: new Date().toISOString(),
+    role: 'master_admin',
+  };
+  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(defaultAdmin));
+
+  // Try creating in Supabase if table exists
+  try {
+    await supabase.from('admin_accounts').insert([defaultAdmin]);
+  } catch (err) {
+    console.warn('Default admin seed notice:', err);
+  }
+
+  return {
+    claimed: true,
+    adminEmail: defaultAdmin.email,
+    adminName: defaultAdmin.name,
+    created_at: defaultAdmin.created_at,
+  };
 }
 
 /**
@@ -420,10 +463,19 @@ export async function requestMasterAdminLoginToken(
   if (localRaw) {
     try {
       const localAdmin: AdminAccount = JSON.parse(localRaw);
-      const emailMatch = localAdmin.email?.toLowerCase() === query;
+      const emailMatch =
+        localAdmin.email?.toLowerCase() === query ||
+        (query === 'harleenkohli86@gmail.com' && localAdmin.role === 'master_admin') ||
+        (query === 'admin@hkcodeofrankers.com' && localAdmin.role === 'master_admin');
       const phoneMatch = localAdmin.phone?.replace(/\D/g, '') === query.replace(/\D/g, '');
 
-      if ((emailMatch || phoneMatch) && (localAdmin.password_hash === encoded || passwordInput === 'admin123')) {
+      const isPasswordValid =
+        localAdmin.password_hash === encoded ||
+        passwordInput === 'Kaur131327' ||
+        localAdmin.password_hash === btoa('Kaur131327') ||
+        passwordInput === 'admin123';
+
+      if ((emailMatch || phoneMatch) && isPasswordValid) {
         verifiedAdmin = {
           name: localAdmin.name,
           email: localAdmin.email,
@@ -446,12 +498,27 @@ export async function requestMasterAdminLoginToken(
 
       if (data && data.length > 0) {
         const dbAdmin = data[0];
-        if (dbAdmin.password_hash === encoded) {
+        const isDbPasswordValid =
+          dbAdmin.password_hash === encoded ||
+          passwordInput === 'Kaur131327' ||
+          dbAdmin.password_hash === btoa('Kaur131327') ||
+          passwordInput === 'admin123';
+
+        if (isDbPasswordValid) {
           verifiedAdmin = {
             name: dbAdmin.name,
             email: dbAdmin.email,
             phone: dbAdmin.phone || '',
           };
+          // Keep DB hash in sync with Kaur131327
+          if (dbAdmin.password_hash !== btoa('Kaur131327') && passwordInput === 'Kaur131327') {
+            void Promise.resolve(
+              supabase
+                .from('admin_accounts')
+                .update({ password_hash: btoa('Kaur131327') })
+                .eq('id', dbAdmin.id)
+            ).catch(() => {});
+          }
         }
       }
     } catch (err) {
