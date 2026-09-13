@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createFreeSlotBooking } from '../services/centralStudentDatabase';
 
 // Supabase Configuration from provided project credentials
 export const SUPABASE_PROJECT_ID = 'qafnqmguzzrhksoitrzf';
@@ -187,7 +188,6 @@ export async function saveCounsellingBooking(data: {
 
   // Also sync directly to Central Free Slot Bookings Database
   try {
-    const { createFreeSlotBooking } = await import('../services/centralStudentDatabase');
     const finalEmail = cleanEmail || `${(data.phone || '').replace(/\D/g, '')}@student.hkcodeofrankers.com`;
     createFreeSlotBooking({
       name: data.name,
