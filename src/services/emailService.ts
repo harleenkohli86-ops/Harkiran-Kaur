@@ -1676,3 +1676,66 @@ HK Code of Rankers`;
   };
 }
 
+/**
+ * Dispatches a one-time 2FA / Login Verification Token to the registered Master Admin email
+ */
+export async function sendAdminLoginTokenEmail(data: {
+  adminName: string;
+  adminEmail: string;
+  token: string;
+  expiresInMinutes?: number;
+}): Promise<{
+  success: boolean;
+  message: string;
+  gmailUrl: string;
+  mailtoUrl: string;
+}> {
+  const expiry = data.expiresInMinutes || 10;
+  const subject = `[HK Code of Rankers] Admin Login Verification Token: ${data.token}`;
+  const plainText = `Hello ${data.adminName || 'Administrator'},
+
+A login attempt was initiated for the Master Admin Portal of HK Code of Rankers.
+
+Your One-Time Admin Security Access Token is:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         ${data.token}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SECURITY NOTICE:
+• This verification token is valid for ${expiry} minutes.
+• Only the authorized Master Admin (${data.adminEmail}) may access this dashboard.
+• Do not share this token with anyone.
+
+If you did not initiate this login request, please verify your credentials immediately.
+
+Head Mentor & Founder: Harkiran Kaur Kohli (AIR 3 CS Professional)
+Academy Helpline: +91 92840 84523
+HK Code of Rankers • https://hkcodeofrankers.com`;
+
+  // Dispatch background email to the admin email
+  sendBackgroundAutomatedEmail({
+    recipientEmail: data.adminEmail,
+    studentName: data.adminName || 'Master Admin',
+    subject,
+    messageText: plainText,
+    orderNumber: `TOKEN-${data.token}`,
+    type: 'ENROLLMENT',
+  });
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    data.adminEmail
+  )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`;
+
+  const mailtoUrl = `mailto:${encodeURIComponent(data.adminEmail)}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(plainText)}`;
+
+  return {
+    success: true,
+    message: `Security token sent to ${data.adminEmail}.`,
+    gmailUrl,
+    mailtoUrl,
+  };
+}
+
+

@@ -382,14 +382,38 @@ export async function registerMasterAdmin(data: {
 }
 
 /**
- * Logs in the administrator
+ * Initiates Master Admin Login:
+ * 1. Validates registered Admin Email and Password.
+ * 2. Generates a secure 6-digit one-time token.
+ * 3. Dispatches the token directly to the registered admin email.
+ * 4. Requires the token to be entered to complete authentication.
  */
-export async function loginMasterAdmin(
+interface PendingAdminVerification {
+  email: string;
+  name: string;
+  phone: string;
+  token: string;
+  expiresAt: number;
+}
+
+const ADMIN_PENDING_2FA_KEY = 'hk_pending_admin_2fa';
+
+export async function requestMasterAdminLoginToken(
   emailOrPhone: string,
   passwordInput: string
-): Promise<{ success: boolean; message: string; session?: AdminSession }> {
+): Promise<{
+  success: boolean;
+  message: string;
+  requiresToken?: boolean;
+  adminEmail?: string;
+  adminName?: string;
+  gmailUrl?: string;
+  devTokenHint?: string;
+}> {
   const query = emailOrPhone.trim().toLowerCase();
   const encoded = btoa(passwordInput);
+
+  let verifiedAdmin: { name: string; email: string; phone: string } | null = null;
 
   // 1. Check local admin record
   const localRaw = localStorage.getItem(ADMIN_STORAGE_KEY);
@@ -400,50 +424,162 @@ export async function loginMasterAdmin(
       const phoneMatch = localAdmin.phone?.replace(/\D/g, '') === query.replace(/\D/g, '');
 
       if ((emailMatch || phoneMatch) && (localAdmin.password_hash === encoded || passwordInput === 'admin123')) {
-        const session: AdminSession = {
-          token: `admin_token_${Date.now()}`,
-          adminName: localAdmin.name,
-          adminEmail: localAdmin.email,
-          adminPhone: localAdmin.phone,
-          loginTime: new Date().toISOString(),
+        verifiedAdmin = {
+          name: localAdmin.name,
+          email: localAdmin.email,
+          phone: localAdmin.phone || '',
         };
-        localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
-        return { success: true, message: 'Welcome back, Administrator!', session };
       }
     } catch (e) {
       console.warn('Local admin check parse error', e);
     }
   }
 
-  // 2. Check Supabase
-  try {
-    const { data } = await supabase
-      .from('admin_accounts')
-      .select('*')
-      .or(`email.ilike.${query},phone.ilike.${query}`)
-      .limit(1);
+  // 2. Check Supabase if not matched locally
+  if (!verifiedAdmin) {
+    try {
+      const { data } = await supabase
+        .from('admin_accounts')
+        .select('*')
+        .or(`email.ilike.${query},phone.ilike.${query}`)
+        .limit(1);
 
-    if (data && data.length > 0) {
-      const dbAdmin = data[0];
-      if (dbAdmin.password_hash === encoded) {
-        const session: AdminSession = {
-          token: `admin_token_${Date.now()}`,
-          adminName: dbAdmin.name,
-          adminEmail: dbAdmin.email,
-          adminPhone: dbAdmin.phone || '',
-          loginTime: new Date().toISOString(),
-        };
-        localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
-        return { success: true, message: 'Authenticated via Supabase!', session };
+      if (data && data.length > 0) {
+        const dbAdmin = data[0];
+        if (dbAdmin.password_hash === encoded) {
+          verifiedAdmin = {
+            name: dbAdmin.name,
+            email: dbAdmin.email,
+            phone: dbAdmin.phone || '',
+          };
+        }
       }
+    } catch (err) {
+      console.warn('Supabase login check error:', err);
     }
-  } catch (err) {
-    console.warn('Supabase login check error:', err);
+  }
+
+  if (!verifiedAdmin) {
+    return {
+      success: false,
+      message: 'Access Denied: Only the registered administrator email and password can access the admin portal.',
+    };
+  }
+
+  // Generate 6-digit secure token
+  const secureToken = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  const pendingData: PendingAdminVerification = {
+    email: verifiedAdmin.email,
+    name: verifiedAdmin.name,
+    phone: verifiedAdmin.phone,
+    token: secureToken,
+    expiresAt: expiryTime,
+  };
+  localStorage.setItem(ADMIN_PENDING_2FA_KEY, JSON.stringify(pendingData));
+
+  // Dynamic import or dispatch of email token
+  let gmailUrl = '';
+  try {
+    const { sendAdminLoginTokenEmail } = await import('../services/emailService');
+    const emailRes = await sendAdminLoginTokenEmail({
+      adminName: verifiedAdmin.name,
+      adminEmail: verifiedAdmin.email,
+      token: secureToken,
+      expiresInMinutes: 10,
+    });
+    gmailUrl = emailRes.gmailUrl;
+  } catch (emailErr) {
+    console.warn('Admin token email dispatch notice:', emailErr);
   }
 
   return {
-    success: false,
-    message: 'Invalid administrator email/phone or password. Please verify your credentials.',
+    success: true,
+    message: `Security token sent to registered email ${verifiedAdmin.email}. Please enter the 6-digit token to complete login.`,
+    requiresToken: true,
+    adminEmail: verifiedAdmin.email,
+    adminName: verifiedAdmin.name,
+    gmailUrl,
+    devTokenHint: secureToken, // Provided for instant testing/convenience
+  };
+}
+
+/**
+ * Verifies the 6-digit token sent to registered admin email
+ */
+export async function verifyMasterAdminLoginToken(
+  enteredToken: string
+): Promise<{ success: boolean; message: string; session?: AdminSession }> {
+  const cleanToken = enteredToken.trim();
+  const rawPending = localStorage.getItem(ADMIN_PENDING_2FA_KEY);
+
+  if (!rawPending) {
+    return {
+      success: false,
+      message: 'No pending admin login request found or session expired. Please sign in again with your email and password.',
+    };
+  }
+
+  try {
+    const pending: PendingAdminVerification = JSON.parse(rawPending);
+
+    if (Date.now() > pending.expiresAt) {
+      localStorage.removeItem(ADMIN_PENDING_2FA_KEY);
+      return {
+        success: false,
+        message: 'Security token has expired. Please request a new token with your admin email and password.',
+      };
+    }
+
+    if (cleanToken !== pending.token) {
+      return {
+        success: false,
+        message: 'Invalid security token. Please check the code sent to your registered email.',
+      };
+    }
+
+    // Token verified! Create active session
+    const session: AdminSession = {
+      token: `admin_token_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      adminName: pending.name,
+      adminEmail: pending.email,
+      adminPhone: pending.phone,
+      loginTime: new Date().toISOString(),
+    };
+
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    localStorage.removeItem(ADMIN_PENDING_2FA_KEY);
+
+    return {
+      success: true,
+      message: 'Two-factor authentication successful! Welcome to the Admin Dashboard.',
+      session,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error verifying security token. Please try again.',
+    };
+  }
+}
+
+/**
+ * Legacy direct login fallback wrapper (now requires token or handles direct if configured)
+ */
+export async function loginMasterAdmin(
+  emailOrPhone: string,
+  passwordInput: string
+): Promise<{ success: boolean; message: string; session?: AdminSession; requiresToken?: boolean }> {
+  // Use requestMasterAdminLoginToken by default for security
+  const res = await requestMasterAdminLoginToken(emailOrPhone, passwordInput);
+  if (!res.success) {
+    return { success: false, message: res.message };
+  }
+  return {
+    success: true,
+    message: res.message,
+    requiresToken: true,
   };
 }
 

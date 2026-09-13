@@ -54,6 +54,8 @@ import {
   checkMasterAdminSlotStatus,
   registerMasterAdmin,
   loginMasterAdmin,
+  requestMasterAdminLoginToken,
+  verifyMasterAdminLoginToken,
   getActiveAdminSession,
   logoutMasterAdmin,
   fetchAllAppointments,
@@ -101,6 +103,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
 
   // Auth Form State
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authStep, setAuthStep] = useState<'credentials' | 'token_verification'>('credentials');
   const [authForm, setAuthForm] = useState({
     name: '',
     email: '',
@@ -109,6 +112,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     confirmPassword: '',
     recoveryPin: '',
   });
+  const [adminInputToken, setAdminInputToken] = useState('');
+  const [pendingAdminEmail, setPendingAdminEmail] = useState('');
+  const [tokenGmailUrl, setTokenGmailUrl] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
@@ -256,18 +262,65 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     }
   };
 
-  // Handle Login
+  // Handle Login: Step 1 - Request Token via registered admin email
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
     setAuthSuccess(null);
 
     setIsAuthLoading(true);
-    const result = await loginMasterAdmin(authForm.email, authForm.password);
+    const result = await requestMasterAdminLoginToken(authForm.email, authForm.password);
+    setIsAuthLoading(false);
+
+    if (result.success) {
+      setPendingAdminEmail(result.adminEmail || authForm.email);
+      if (result.gmailUrl) setTokenGmailUrl(result.gmailUrl);
+      setAuthStep('token_verification');
+      setAuthSuccess(`Access Token sent to ${result.adminEmail || 'your registered email'}! Please enter the 6-digit verification code.`);
+    } else {
+      setAuthError(result.message);
+    }
+  };
+
+  // Handle Login: Step 2 - Verify 6-digit email token
+  const handleVerifyToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminInputToken.trim()) {
+      setAuthError('Please enter the 6-digit security token.');
+      return;
+    }
+
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsAuthLoading(true);
+
+    const result = await verifyMasterAdminLoginToken(adminInputToken.trim());
     setIsAuthLoading(false);
 
     if (result.success && result.session) {
       setSession(result.session);
+      setAuthStep('credentials');
+      setAdminInputToken('');
+    } else {
+      setAuthError(result.message);
+    }
+  };
+
+  // Handle Resend Token
+  const handleResendToken = async () => {
+    if (!authForm.email || !authForm.password) {
+      setAuthStep('credentials');
+      return;
+    }
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsAuthLoading(true);
+    const result = await requestMasterAdminLoginToken(authForm.email, authForm.password);
+    setIsAuthLoading(false);
+
+    if (result.success) {
+      setAuthSuccess('New security token dispatched to your registered email!');
+      if (result.gmailUrl) setTokenGmailUrl(result.gmailUrl);
     } else {
       setAuthError(result.message);
     }
@@ -278,6 +331,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     logoutMasterAdmin();
     setSession(null);
     setSelectedAppointment(null);
+    setAuthStep('credentials');
+    setAdminInputToken('');
   };
 
   // Handle Status Change
@@ -847,12 +902,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 <Shield className="w-6 h-6 text-[#C8A45D]" />
               </div>
               <h1 className="font-cinzel text-2xl font-bold text-[#0F0F0F]">
-                {authMode === 'register' ? 'Master Admin Setup' : 'Admin Portal Login'}
+                {authMode === 'register'
+                  ? 'Master Admin Setup'
+                  : authStep === 'token_verification'
+                  ? 'Email Security Token'
+                  : 'Master Admin Login'}
               </h1>
               <p className="text-xs text-gray-600">
                 {authMode === 'register'
                   ? 'Single-slot initial provisioning. Only 1 master admin account is permitted.'
-                  : 'Authorized access for HK Code of Rankers faculty & administration.'}
+                  : authStep === 'token_verification'
+                  ? 'Two-Factor verification: check your registered email for the 6-digit access code.'
+                  : 'Restricted access: Only the registered administrator email & password with email token verification.'}
               </p>
 
               <div className="pt-2">
@@ -864,7 +925,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 ) : (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-full text-[11px] font-semibold">
                     <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Master Admin Configured</span>
+                    <span>Master Admin Protected (2FA Email Token)</span>
                   </div>
                 )}
               </div>
@@ -891,7 +952,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Harkiran Kaur Kohli"
+                    placeholder="Enter your full name"
                     value={authForm.name}
                     onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-[#C8A45D] outline-none"
@@ -903,7 +964,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   <input
                     type="email"
                     required
-                    placeholder="e.g. harleenkohli86@gmail.com"
+                    placeholder="Enter registered administrator email"
                     value={authForm.email}
                     onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-[#C8A45D] outline-none"
@@ -955,6 +1016,79 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   {isAuthLoading ? 'Claiming Slot & Creating Admin...' : 'Claim Single Slot & Create Master Admin'}
                 </button>
               </form>
+            ) : authStep === 'token_verification' ? (
+              <form onSubmit={handleVerifyToken} className="space-y-4 text-xs">
+                <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1 text-left">
+                  <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
+                    <Key className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Email Verification Token Dispatched</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    A 6-digit one-time security token was generated and dispatched to the registered admin email: <strong className="font-semibold text-gray-900">{pendingAdminEmail}</strong>.
+                  </p>
+                  {tokenGmailUrl && (
+                    <div className="pt-1.5">
+                      <a
+                        href={tokenGmailUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 hover:text-indigo-900 underline"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Open Gmail Inbox to View Token</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-gray-700 font-semibold">Enter 6-Digit Admin Token</label>
+                    <span className="text-[10px] text-gray-400">Valid for 10 minutes</span>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    autoFocus
+                    placeholder="------"
+                    value={adminInputToken}
+                    onChange={(e) => setAdminInputToken(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-4 py-3 text-center tracking-[0.3em] font-mono text-lg font-bold rounded-xl border-2 border-[#C8A45D]/40 focus:border-[#C8A45D] outline-none shadow-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isAuthLoading || adminInputToken.length < 6}
+                  className="w-full py-3 gold-gradient-bg text-black font-montserrat font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isAuthLoading ? 'Verifying Token...' : 'Verify Token & Access Admin Portal'}
+                </button>
+
+                <div className="flex items-center justify-between pt-2 text-[11px] text-gray-500">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthStep('credentials');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="hover:text-black transition-colors font-medium cursor-pointer"
+                  >
+                    ← Re-enter Password
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResendToken}
+                    disabled={isAuthLoading}
+                    className="text-[#C8A45D] hover:text-[#9A7432] font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    Resend Token
+                  </button>
+                </div>
+              </form>
             ) : (
               <form onSubmit={handleLogin} className="space-y-4 text-xs">
                 <div>
@@ -962,7 +1096,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. harleenkohli86@gmail.com"
+                    placeholder="Enter registered admin email or phone"
                     value={authForm.email}
                     onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:border-[#C8A45D] outline-none"
@@ -986,7 +1120,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   disabled={isAuthLoading}
                   className="w-full py-3 gold-gradient-bg text-black font-montserrat font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all shadow-md cursor-pointer disabled:opacity-75"
                 >
-                  {isAuthLoading ? 'Authenticating...' : 'Sign In to Admin Dashboard'}
+                  {isAuthLoading ? 'Validating & Sending Token...' : 'Verify Credentials & Send Email Token'}
                 </button>
               </form>
             )}

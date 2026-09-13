@@ -26,14 +26,17 @@ export const HKLogo: React.FC<HKLogoProps> = ({
         style={{ transform: 'translateZ(0)' }}
       >
         {/* Full HD Crystal Clear Logo Emblem */}
-        <img
-          src={hdLogoImg}
-          alt="HK Code of Rankers Logo"
-          className="w-full h-full object-cover rounded-full select-none"
-          loading="eager"
-          decoding="sync"
-          referrerPolicy="no-referrer"
-        />
+        <div className="w-full h-full rounded-full overflow-hidden bg-[#FAF7F0] flex items-center justify-center">
+          <img
+            src={hdLogoImg}
+            alt="HK Code of Rankers Logo"
+            className="w-full h-full object-cover rounded-full select-none scale-[1.12] transform-gpu drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+            loading="eager"
+            decoding="sync"
+            referrerPolicy="no-referrer"
+            style={{ imageRendering: '-webkit-optimize-contrast' }}
+          />
+        </div>
       </div>
 
       {showText && (
