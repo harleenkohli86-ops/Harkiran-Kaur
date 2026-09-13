@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import founderImg from '../assets/images/regenerated_image_1785612225656.jpg';
+import studyTrackGraphicImg from '../assets/images/hk_studytrack_pro_graphic_1789259325801.jpg';
 import { PageId } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -773,7 +774,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="p-4 sm:p-5 bg-gradient-to-r from-[#171512] to-[#0D0C0A] border-2 border-[#C8A45D]/50 rounded-2xl flex flex-col md:flex-row items-center gap-5 shadow-xl">
               <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden border border-[#C8A45D]/40 shrink-0 relative group">
                 <img
-                  src="/src/assets/images/hk_studytrack_pro_graphic_1789259325801.jpg"
+                  src={studyTrackGraphicImg}
                   alt="HK StudyTrack Pro Console Graphic"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

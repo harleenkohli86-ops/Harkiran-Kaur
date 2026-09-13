@@ -26,6 +26,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { PRODUCTS } from '../data/products';
 import { Product, PageId } from '../types';
+import studyTrackGraphicImg from '../assets/images/hk_studytrack_pro_graphic_1789259325801.jpg';
 
 interface HKStudyTrackProSelectorProps {
   onNavigate?: (page: PageId) => void;
@@ -576,7 +577,7 @@ export const HKStudyTrackProSelector: React.FC<HKStudyTrackProSelectorProps> = (
             {/* Glowing Accent Border & Watermark */}
             <div className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-inner">
               <img
-                src="/src/assets/images/hk_studytrack_pro_graphic_1789259325801.jpg"
+                src={studyTrackGraphicImg}
                 alt="HK StudyTrack Pro Futuristic ICSI Progress Index Console"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
