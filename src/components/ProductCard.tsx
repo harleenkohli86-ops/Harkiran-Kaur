@@ -130,7 +130,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden border-2 border-[#C8A45D] shadow-lg bg-[#0F0F0F] relative group-hover:scale-105 transition-transform duration-300">
               <img
                 src={founderImg}
-                alt="CS Harkiran Kaur"
+                alt="Harkiran Kaur"
                 className="w-full h-full object-cover object-top"
               />
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent py-0.5 px-1 text-center">

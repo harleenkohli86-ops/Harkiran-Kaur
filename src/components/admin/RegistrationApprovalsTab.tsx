@@ -60,8 +60,8 @@ export const RegistrationApprovalsTab: React.FC<RegistrationApprovalsTabProps> =
     const cleanPhone = student.phone.replace(/\D/g, '');
     const phoneWithCountry = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
     const msg = student.registrationStatus === 'approved'
-      ? `Hello ${student.fullName}! Your HK Code of Rankers registration has been approved by CS Harkiran Kaur! 🎉\n\nYou can now log in to your Student Portal using your email: ${student.email}. Once logged in, you can complete your course enrollment and access your personalized mentorship roadmap.`
-      : `Hello ${student.fullName}! This is CS Harkiran Kaur's team from HK Code of Rankers regarding your ${student.targetExam} registration.`;
+      ? `Hello ${student.fullName}! Your HK Code of Rankers registration has been approved by Harkiran Kaur! 🎉\n\nYou can now log in to your Student Portal using your email: ${student.email}. Once logged in, you can complete your course enrollment and access your personalized mentorship roadmap.`
+      : `Hello ${student.fullName}! This is Harkiran Kaur's team from HK Code of Rankers regarding your ${student.targetExam} registration.`;
     window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
   };
 

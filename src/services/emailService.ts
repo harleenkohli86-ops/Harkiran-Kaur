@@ -396,7 +396,7 @@ OFFICIAL ENROLLMENT RECEIPT
 ⏱️ WHAT HAPPENS NEXT? (WITHIN 24 HOURS)
 ==================================================
 1. Direct WhatsApp & Call Contact:
-Our mentorship team and CS Harkiran Kaur will contact you on your registered phone (+91 ${data.studentPhone}) within the next 24 hours.
+Our mentorship team and Harkiran Kaur will contact you on your registered phone (+91 ${data.studentPhone}) within the next 24 hours.
 
 2. 1-on-1 Strategy Session:
 We will analyze your past attempts, daily study schedule, and syllabus completion.
@@ -407,7 +407,7 @@ Study material and test series will be soon launching! You will receive priority
 If you have urgent questions, feel free to reply to this email or reach our official helpline at +91 92840 84523.
 
 Warm regards,
-CS Harkiran Kaur Kohli
+Harkiran Kaur Kohli
 Founder & Head Mentor (AIR 3 CS Professional)
 HK Code of Rankers • Nashik, Maharashtra
 Website: https://hkcodeofrankers.com`;
@@ -446,11 +446,11 @@ Congratulations, your enrollment with HK Code of Rankers is logged!
 *Order Number:* ${data.orderNumber}
 *Verified UTR:* ${data.utrNumber}
 *Amount Paid:* ₹${data.amount.toLocaleString('en-IN')}/-
-*Head Mentor:* CS Harkiran Kaur (AIR 3 CS Professional)
+*Head Mentor:* Harkiran Kaur (AIR 3 CS Professional)
 *Email Workspace:* hk.code.of.rankers@gmail.com
 
 *Next Steps (Within 24 Hours):*
-CS Harkiran Kaur will connect with you to schedule your 1-on-1 diagnostic call and unlock your evaluated test series schedule.
+Harkiran Kaur will connect with you to schedule your 1-on-1 diagnostic call and unlock your evaluated test series schedule.
 
 You can now log in to your Student Portal anytime to view your enrolled courses, syllabus tracker, and download your official Tax Invoice!
 
@@ -463,7 +463,7 @@ Welcome to HK Code of Rankers! 🚀`;
  * Returns a 1-click manual WhatsApp link for students to message the academy directly
  */
 export function getStudentToAcademyWhatsAppUrl(studentName: string, orderNumber?: string, programName?: string): string {
-  const text = `Hello CS Harkiran Kaur Ma'am,
+  const text = `Hello Harkiran Kaur Ma'am,
 
 I am registered student *${studentName}* on HK Code of Rankers.
 ${orderNumber ? `*Order / Reg ID:* ${orderNumber}\n` : ''}${programName ? `*Program:* ${programName}\n` : ''}
@@ -529,7 +529,7 @@ Registration Summary:
 • Registered Email: ${params.studentEmail}
 • Mobile / WhatsApp: ${params.studentPhone}
 • Target ICSI Exam: ${params.targetExam}
-• Head Mentor: CS Harkiran Kaur (AIR 3 CS Professional)
+• Head Mentor: Harkiran Kaur (AIR 3 CS Professional)
 • Official Academy Email: hk.code.of.rankers@gmail.com
 
 Student Portal Features:
@@ -540,7 +540,7 @@ Student Portal Features:
 Official Student Helpline: +91 92840 84523.
 
 Warm regards,
-CS Harkiran Kaur Kohli
+Harkiran Kaur Kohli
 HK Code of Rankers`;
 
   sendBackgroundAutomatedEmail({
@@ -811,7 +811,7 @@ export function generateStudentApprovalEmailHtml(data: StudentApprovalEmailData)
     <div class="email-body">
       <h2 class="greeting">Dear ${data.studentName},</h2>
       <p class="lead-text">
-        Great news! Your registration and enrollment with <strong>HK Code of Rankers</strong> have been <strong>officially verified and approved</strong> by CS Harkiran Kaur and our admissions team.
+        Great news! Your registration and enrollment with <strong>HK Code of Rankers</strong> have been <strong>officially verified and approved</strong> by Harkiran Kaur and our admissions team.
       </p>
 
       <div class="action-box">
@@ -853,7 +853,7 @@ export function generateStudentApprovalEmailHtml(data: StudentApprovalEmailData)
           Reply to this email or call our student helpline at <strong>+91 92840 84523</strong>.
         </p>
         <div style="margin-top: 16px;">
-          <strong style="color: #0F0F0F;">CS Harkiran Kaur Kohli</strong><br/>
+          <strong style="color: #0F0F0F;">Harkiran Kaur Kohli</strong><br/>
           <span style="font-size: 12px; color: #8A651E;">AIR 3 CS Professional &bull; Founder, HK Code of Rankers</span>
         </div>
       </div>
@@ -908,7 +908,7 @@ Your access to the student syllabus tracker, 1-on-1 mentorship schedule, and tes
 For any assistance, contact our student helpline: +91 92840 84523.
 
 Warm regards,
-CS Harkiran Kaur Kohli
+Harkiran Kaur Kohli
 Founder & Head Mentor (AIR 3 CS Professional)
 HK Code of Rankers`;
 }
@@ -922,7 +922,7 @@ export function getWhatsAppApprovalUrl(data: StudentApprovalEmailData): string {
   const text = `*REGISTRATION APPROVED — HK CODE OF RANKERS* 🎓
 
 Hello *${data.studentName}*! 
-Your registration has been officially approved by CS Harkiran Kaur!
+Your registration has been officially approved by Harkiran Kaur!
 
 Now you can log in to your account with your registered email address:
 📧 *${data.studentEmail}*
@@ -1009,13 +1009,13 @@ export async function sendRegistrationRejectedEmail(data: {
 
 Thank you for your interest in HK Code of Rankers Mentorship.
 
-Your registration application has been reviewed by CS Harkiran Kaur and our admissions committee. At this moment, we are unable to approve your registration for the following reason:
+Your registration application has been reviewed by Harkiran Kaur and our admissions committee. At this moment, we are unable to approve your registration for the following reason:
 "${data.reason || 'Batch capacity reached or eligibility requirements not met.'}"
 
 If you believe this is in error, please contact our student admissions desk directly on WhatsApp / Call: +91 92840 84523.
 
 Warm regards,
-CS Harkiran Kaur Kohli
+Harkiran Kaur Kohli
 HK Code of Rankers`;
 
   sendBackgroundAutomatedEmail({
@@ -1044,7 +1044,7 @@ export async function sendPaymentApprovedEmail(data: {
   const subject = `Payment Approved: Course & Mentorship Access Activated — HK Code of Rankers`;
   const text = `Congratulations ${data.studentName}!
 
-Your payment for ${data.courseName} (Amount: ₹${data.amount}/-, UTR: ${data.utrNumber}) has been verified and approved by CS Harkiran Kaur!
+Your payment for ${data.courseName} (Amount: ₹${data.amount}/-, UTR: ${data.utrNumber}) has been verified and approved by Harkiran Kaur!
 
 Your Course and Student Mentorship Portal are now fully active:
 - Official ICSI Syllabus Tracker Unlocked
@@ -1056,7 +1056,7 @@ Log in to your Student Portal now: https://hkcodeofrankers.com/student-portal
 Welcome to the Rankers Batch!
 
 Warm regards,
-CS Harkiran Kaur Kohli (AIR 3)
+Harkiran Kaur Kohli (AIR 3)
 HK Code of Rankers`;
 
   sendBackgroundAutomatedEmail({
@@ -1158,7 +1158,7 @@ export async function sendSlotBookingConfirmationEmail(data: {
 
   const text = `Hello ${data.studentName},
 
-Your 1-on-1 Mentorship Call slot has been booked with CS Harkiran Kaur Kohli (AIR 3 CS Professional).
+Your 1-on-1 Mentorship Call slot has been booked with Harkiran Kaur Kohli (AIR 3 CS Professional).
 
 SLOT BOOKING DETAILS:
 - Booking Reference: ${data.bookingId || 'Active'}
@@ -1177,7 +1177,7 @@ NEXT STEPS:
 3. If you need to reschedule, please notify us at least 6 hours in advance via your Student Portal or official email.
 
 Warm regards,
-CS Harkiran Kaur Kohli (AIR 3)
+Harkiran Kaur Kohli (AIR 3)
 HK Code of Rankers Desk
 Email: hk.code.of.rankers@gmail.com
 Helpline: +91 92840 84523`;
@@ -1210,7 +1210,7 @@ export async function sendFreeSlotBookingConfirmationEmail(data: {
 
   const text = `Hello ${data.candidateName},
 
-Your Free 1-on-1 Guidance & Counselling Session with CS Harkiran Kaur Kohli (AIR 3 CS Professional) has been received and scheduled!
+Your Free 1-on-1 Guidance & Counselling Session with Harkiran Kaur Kohli (AIR 3 CS Professional) has been received and scheduled!
 
 FREE SLOT DETAILS:
 - Booking Reference: ${data.bookingId || 'FREE-DEMO'}
@@ -1259,8 +1259,420 @@ export function getAdminToSlotStudentWhatsAppUrl(
     ? cleanPhone
     : `91${cleanPhone.slice(-10)}`;
 
-  const text = `Hello ${studentName}, this is CS Harkiran Kaur Kohli from HK Code of Rankers regarding your scheduled mentorship slot on ${slotDate} at ${slotTime} (${program}). Looking forward to connecting!`;
+  const text = `Hello ${studentName}, this is Harkiran Kaur Kohli from HK Code of Rankers regarding your scheduled mentorship slot on ${slotDate} at ${slotTime} (${program}). Looking forward to connecting!`;
 
   return `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`;
+}
+
+export interface EnquiryConfirmationEmailData {
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  programName: string;
+  subjectQuery?: string;
+  notes?: string;
+  enquiryId?: string;
+  receivedDate?: string;
+}
+
+/**
+ * Generates an official, highly polished HTML confirmation email specifically for Student Enquiries / Counselling
+ */
+export function generateEnquiryConfirmationEmailHtml(data: EnquiryConfirmationEmailData): string {
+  const cleanDate =
+    data.receivedDate ||
+    new Date().toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+  const enqId = data.enquiryId || `ENQ-${Date.now().toString().slice(-6)}`;
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquiry Received — HK Code of Rankers</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8F6F2;
+      color: #1A1A1A;
+      line-height: 1.6;
+    }
+    .email-container {
+      max-width: 620px;
+      margin: 30px auto;
+      background: #FFFFFF;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #E5DFD3;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .email-header {
+      background: #0F0F0F;
+      padding: 32px 24px;
+      text-align: center;
+      border-bottom: 3px solid #C8A45D;
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #FFE3A0;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #D4AF37;
+      margin: 6px 0 0 0;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .badge-bar {
+      background: #FAF5E9;
+      padding: 12px 24px;
+      text-align: center;
+      border-bottom: 1px solid #EDE6D8;
+    }
+    .badge-text {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8A651E;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .email-body {
+      padding: 36px 32px;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111111;
+      margin-bottom: 12px;
+    }
+    .intro-p {
+      font-size: 14px;
+      color: #4A4A4A;
+      margin-bottom: 24px;
+    }
+    .enquiry-card {
+      background: #FAF8F5;
+      border: 1px solid #E8DFCF;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8A651E;
+      margin-top: 0;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #E5DBC7;
+      padding-bottom: 8px;
+    }
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #EADECA;
+      font-size: 13px;
+    }
+    .data-row:last-child {
+      border-bottom: none;
+    }
+    .data-label {
+      color: #666666;
+      font-weight: 500;
+    }
+    .data-value {
+      color: #111111;
+      font-weight: 700;
+      text-align: right;
+    }
+    .steps-box {
+      background: #FFFFFF;
+      border: 1px solid #E5DFD3;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .step-item {
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: #333333;
+    }
+    .step-num {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      border-radius: 50%;
+      background: #C8A45D;
+      color: #000000;
+      font-weight: 800;
+      text-align: center;
+      margin-right: 8px;
+      font-size: 11px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 28px 0;
+    }
+    .btn {
+      display: inline-block;
+      background: #25D366;
+      color: #FFFFFF !important;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .signature-section {
+      border-top: 1px solid #E5DFD3;
+      padding-top: 20px;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .sig-text {
+      font-size: 13px;
+      color: #333;
+    }
+    .sig-name {
+      font-weight: 800;
+      color: #111;
+      font-size: 14px;
+    }
+    .sig-title {
+      color: #8A651E;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .footer {
+      background: #F2EFE9;
+      padding: 24px;
+      text-align: center;
+      font-size: 11px;
+      color: #777777;
+      border-top: 1px solid #E5DFD3;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1 class="brand-title">HK Code of Rankers</h1>
+      <p class="brand-subtitle">Exclusive CS Mentorship &bull; Admissions &amp; Academic Cell</p>
+    </div>
+    
+    <div class="badge-bar">
+      <span class="badge-text">&bull; Enquiry Confirmation &amp; Consultation Request &bull;</span>
+    </div>
+
+    <div class="email-body">
+      <div class="greeting">Dear ${data.candidateName},</div>
+      
+      <p class="intro-p">
+        Thank you for your interest in <strong>HK Code of Rankers</strong>! We have received your mentorship enquiry regarding <strong>${data.programName}</strong>.
+      </p>
+
+      <div class="enquiry-card">
+        <h3 class="card-title">Enquiry Summary &amp; Reference</h3>
+        <div class="data-row">
+          <span class="data-label">Reference ID:</span>
+          <span class="data-value">${enqId}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Candidate Name:</span>
+          <span class="data-value">${data.candidateName}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Email Address:</span>
+          <span class="data-value">${data.candidateEmail}</span>
+        </div>
+        ${data.candidatePhone ? `
+        <div class="data-row">
+          <span class="data-label">Mobile / WhatsApp:</span>
+          <span class="data-value">${data.candidatePhone}</span>
+        </div>` : ''}
+        <div class="data-row">
+          <span class="data-label">Program of Interest:</span>
+          <span class="data-value">${data.programName}</span>
+        </div>
+        ${data.subjectQuery ? `
+        <div class="data-row">
+          <span class="data-label">Subject / Topic:</span>
+          <span class="data-value">${data.subjectQuery}</span>
+        </div>` : ''}
+        ${data.notes ? `
+        <div class="data-row">
+          <span class="data-label">Your Query / Note:</span>
+          <span class="data-value">${data.notes}</span>
+        </div>` : ''}
+        <div class="data-row">
+          <span class="data-label">Date Received:</span>
+          <span class="data-value">${cleanDate}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Status:</span>
+          <span class="data-value" style="color: #8A651E;">Assigned to Mentor Harkiran Kaur Kohli</span>
+        </div>
+      </div>
+
+      <div class="steps-box">
+        <h4 style="margin: 0 0 14px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #111;">What Happens Next:</h4>
+        <div class="step-item">
+          <span class="step-num">1</span> <strong>Profile Evaluation:</strong> Mentor Harkiran Kaur Kohli (AIR 3) reviews your educational background, current attempt timeline, and study challenges.
+        </div>
+        <div class="step-item">
+          <span class="step-num">2</span> <strong>Direct Connect:</strong> Our academic team will reach out via WhatsApp or phone within 24 business hours to address your query and schedule your 1-on-1 strategy call.
+        </div>
+        <div class="step-item">
+          <span class="step-num">3</span> <strong>Custom Roadmap:</strong> You will receive clarity on revision cycles, answer writing methodology, and how to conquer your CS exams on your 1st attempt.
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <a href="https://wa.me/919284084523?text=${encodeURIComponent(`Hello Harkiran Ma'am, I submitted an enquiry for ${data.programName} (Ref: ${enqId}). Looking forward to guidance!`)}" class="btn" target="_blank">
+          Chat Directly on WhatsApp with Mentor Desk
+        </a>
+      </div>
+
+      <p style="font-size: 13px; color: #666; margin-top: 24px;">
+        If you have urgent questions, feel free to contact us at <strong>hk.code.of.rankers@gmail.com</strong> or call <strong>+91 92840 84523</strong>.
+      </p>
+
+      <div class="signature-section">
+        <div class="sig-text">
+          <div class="sig-name">Harkiran Kaur Kohli</div>
+          <div class="sig-title">Founder &amp; Chief CS Mentor &bull; AIR 3 Achiever</div>
+          <div style="font-size: 11px; color: #777; margin-top: 2px;">HK Code of Rankers &bull; Transforming CS Aspirants into Rankers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p style="margin: 0 0 6px 0;">&copy; ${new Date().getFullYear()} HK Code of Rankers. All rights reserved.</p>
+      <p style="margin: 0;">Official Academic Helpline: +91 92840 84523 &bull; Pune, Maharashtra, India</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Dispatches an official Enquiry Confirmation Email to a student who submitted a contact or guidance enquiry
+ */
+export async function sendEnquiryConfirmationEmail(data: EnquiryConfirmationEmailData): Promise<{
+  success: boolean;
+  message: string;
+  record: DispatchedEmailRecord;
+  gmailUrl: string;
+  whatsAppUrl: string;
+  mailtoUrl: string;
+  plainText: string;
+}> {
+  const enqId = data.enquiryId || `ENQ-${Date.now().toString().slice(-6)}`;
+  const previewHtml = generateEnquiryConfirmationEmailHtml({ ...data, enquiryId: enqId });
+  const subject = `Enquiry Received: ${data.programName} — HK Code of Rankers [${enqId}]`;
+
+  const plainText = `Dear ${data.candidateName},
+
+Thank you for your enquiry regarding ${data.programName} with HK Code of Rankers!
+
+We have successfully received your query (Ref: ${enqId}). Mentor Harkiran Kaur Kohli (AIR 3 Achiever) and our admissions desk will review your details and reach out via WhatsApp / Call within 24 business hours.
+
+Enquiry Details:
+- Candidate Name: ${data.candidateName}
+- Email: ${data.candidateEmail}
+- Mobile/WhatsApp: ${data.candidatePhone || 'Not provided'}
+- Program: ${data.programName}
+${data.subjectQuery ? `- Subject: ${data.subjectQuery}\n` : ''}${data.notes ? `- Message/Notes: ${data.notes}\n` : ''}
+
+In the meantime, feel free to message our student helpdesk on WhatsApp at +91 92840 84523.
+
+Warm regards,
+Harkiran Kaur Kohli (AIR 3)
+HK Code of Rankers`;
+
+  const record: DispatchedEmailRecord = {
+    id: `eml_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    recipientEmail: data.candidateEmail,
+    studentName: data.candidateName,
+    orderNumber: enqId,
+    utrNumber: 'ENQUIRY-CONFIRMED',
+    subject,
+    status: 'DELIVERED',
+    sentAt: new Date().toISOString(),
+    previewHtml,
+  };
+
+  try {
+    const raw = localStorage.getItem(SENT_EMAILS_STORAGE_KEY);
+    const list: DispatchedEmailRecord[] = raw ? JSON.parse(raw) : [];
+    list.unshift(record);
+    localStorage.setItem(SENT_EMAILS_STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+  } catch (err) {
+    console.warn('Error persisting dispatched enquiry email record:', err);
+  }
+
+  // Send background email
+  sendBackgroundAutomatedEmail({
+    recipientEmail: data.candidateEmail,
+    studentName: data.candidateName,
+    subject,
+    messageText: plainText,
+    orderNumber: enqId,
+    type: 'ENROLLMENT',
+  });
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    data.candidateEmail
+  )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`;
+
+  const mailtoUrl = `mailto:${encodeURIComponent(data.candidateEmail)}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(plainText)}`;
+
+  const cleanPhone = (data.candidatePhone || '').replace(/\D/g, '');
+  const phoneWithCountry =
+    cleanPhone.startsWith('91') && cleanPhone.length > 10 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+
+  const whatsAppUrl = cleanPhone
+    ? `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(
+        `Hello ${data.candidateName}, thank you for your enquiry regarding ${data.programName} on HK Code of Rankers (Ref: ${enqId}). Harkiran Kaur Kohli (AIR 3) and our academic team have received your request and look forward to guiding you!`
+      )}`
+    : `https://wa.me/919284084523?text=${encodeURIComponent(
+        `Hello Harkiran Ma'am, enquiry received from ${data.candidateName} for ${data.programName} (Ref: ${enqId}).`
+      )}`;
+
+  return {
+    success: true,
+    message: `Enquiry confirmation email prepared and dispatched to ${data.candidateEmail}.`,
+    record,
+    gmailUrl,
+    whatsAppUrl,
+    mailtoUrl,
+    plainText,
+  };
 }
 

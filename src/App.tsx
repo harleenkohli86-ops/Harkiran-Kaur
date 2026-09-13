@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { FloatingButtons } from './components/FloatingButtons';
 import { JoinMentorshipModal, BookCounsellingModal } from './components/Modals';
+import { StudentSystemGuideModal } from './components/StudentSystemGuideModal';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AuthModal } from './components/AuthModal';
@@ -20,6 +21,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<PageId>('home');
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [counsellingModalOpen, setCounsellingModalOpen] = useState(false);
+  const [systemGuideOpen, setSystemGuideOpen] = useState(false);
 
   const handleNavigate = (page: PageId) => {
     setCurrentPage(page);
@@ -34,6 +36,7 @@ export default function App() {
         onNavigate={handleNavigate}
         onOpenJoinModal={() => setJoinModalOpen(true)}
         onOpenCounsellingModal={() => setCounsellingModalOpen(true)}
+        onOpenSystemGuide={() => setSystemGuideOpen(true)}
       />
 
       {/* Main View Router */}
@@ -216,6 +219,12 @@ export default function App() {
       <BookCounsellingModal
         isOpen={counsellingModalOpen}
         onClose={() => setCounsellingModalOpen(false)}
+      />
+
+      <StudentSystemGuideModal
+        isOpen={systemGuideOpen}
+        onClose={() => setSystemGuideOpen(false)}
+        onNavigate={handleNavigate}
       />
 
       {/* Cart, Checkout & Auth Modals */}

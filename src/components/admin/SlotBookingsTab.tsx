@@ -83,7 +83,7 @@ export const SlotBookingsTab: React.FC<SlotBookingsTabProps> = ({
     const cleanPhone = b.phone.replace(/\D/g, '');
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     const text = encodeURIComponent(
-      `Hello ${b.studentName}! This is CS Harkiran Kaur from HK Code of Rankers.\n\n` +
+      `Hello ${b.studentName}! This is Harkiran Kaur from HK Code of Rankers.\n\n` +
       `Your 1-on-1 Mentorship Call has been scheduled:\n` +
       `📅 Date: ${b.bookingDate}\n` +
       `⏰ Time: ${b.bookingTime}\n` +

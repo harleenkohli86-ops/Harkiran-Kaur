@@ -112,13 +112,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const applyCoupon = (code: string) => {
     const formatted = code.trim().toUpperCase();
 
-    // 1. Check one-time 15% & 5% discount codes
+    // 1. Check one-time 15%, 5%, and all Admin Custom Discount Codes from database
     const discountCheck = validateDiscountCode(formatted);
     if (discountCheck.valid) {
       setCouponCode(formatted);
       setDiscountPercentage(discountCheck.discountPercent);
       return {
         success: true,
+        message: discountCheck.message,
+      };
+    } else if (discountCheck.record) {
+      // It exists in database but is inactive or already used
+      return {
+        success: false,
         message: discountCheck.message,
       };
     } else if (formatted.startsWith('HK15-') || formatted === 'HK5') {
@@ -143,7 +149,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return {
       success: false,
-      message: 'Invalid promo code. Please enter a valid coupon code (e.g. AIR1, RANKER15, HK5).',
+      message: 'Invalid promo code. Please enter a valid coupon code.',
     };
   };
 

@@ -26,7 +26,8 @@ interface OrderContextType {
   downloadInvoicePDF: (order: OrderItem) => void;
 }
 
-const ORDER_STORAGE_KEY = 'hk_rankers_orders';
+const ORDER_STORAGE_KEY = 'hk_rankers_orders_v1';
+const LEGACY_ORDER_STORAGE_KEY = 'hk_rankers_orders';
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
@@ -36,7 +37,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [orders, setOrders] = useState<OrderItem[]>(() => {
     try {
-      const saved = localStorage.getItem(ORDER_STORAGE_KEY);
+      const saved = localStorage.getItem(ORDER_STORAGE_KEY) || localStorage.getItem(LEGACY_ORDER_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -54,6 +55,21 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // ignore
     }
   }, [orders]);
+
+  // Listen for cross-tab order updates
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ORDER_STORAGE_KEY && e.newValue) {
+        try {
+          setOrders(JSON.parse(e.newValue));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const createOrder = async (
     paymentMethod: 'UPI' | 'Card' | 'NetBanking' | 'Wallet' | 'EMI',
@@ -119,25 +135,28 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('Supabase save error:', e);
     }
 
-    // Attach purchased product IDs to student account
-    if (user) {
+    // Attach purchased product IDs to student account ONLY if already verified/instant (not pending UPI verification)
+    if (user && !isDirectUpiWithUtr) {
       const purchasedIds = cartItems.map((ci) => ci.product.id);
       grantPurchase(purchasedIds);
     }
 
-    // Automatically send official confirmation email to student & workspace immediately
-    try {
-      sendStudentConfirmationEmail({
-        studentName: finalBillingDetails.fullName || 'CS Aspirant',
-        studentEmail: finalBillingDetails.email || '',
-        studentPhone: finalBillingDetails.phone || '',
-        programName: newOrder.items.map((i) => i.name).join(' + '),
-        amount: totalAmount,
-        utrNumber: options?.utrNumber || 'Verified UPI Transfer',
-        orderNumber: orderNum,
-      }).catch((err) => console.warn('Automatic order email send notice:', err));
-    } catch (mailErr) {
-      console.warn('Mail dispatch error on order create:', mailErr);
+    // Automatically send official confirmation email ONLY if payment is already verified
+    // If pending UPI UTR verification, the confirmation email is dispatched strictly upon Admin Approval
+    if (!isDirectUpiWithUtr) {
+      try {
+        sendStudentConfirmationEmail({
+          studentName: finalBillingDetails.fullName || 'CS Aspirant',
+          studentEmail: finalBillingDetails.email || '',
+          studentPhone: finalBillingDetails.phone || '',
+          programName: newOrder.items.map((i) => i.name).join(' + '),
+          amount: totalAmount,
+          utrNumber: options?.utrNumber || 'Verified UPI Transfer',
+          orderNumber: orderNum,
+        }).catch((err) => console.warn('Automatic order email send notice:', err));
+      } catch (mailErr) {
+        console.warn('Mail dispatch error on order create:', mailErr);
+      }
     }
 
     // Clear cart after successful submission

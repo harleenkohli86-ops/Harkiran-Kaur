@@ -193,9 +193,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenCounsellingMod
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('resources')} className="hover:text-[#8A651E] transition-colors cursor-pointer text-[#333333] flex items-center gap-1.5">
+                <button onClick={() => onNavigate('test-series')} className="hover:text-[#8A651E] transition-colors cursor-pointer text-[#333333] flex items-center gap-1.5">
                   <span>Test Series (All 3 Levels)</span>
-                  <span className="text-[9px] px-1.5 py-0.5 bg-amber-500/15 text-amber-800 rounded font-bold">Soon</span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/15 text-emerald-800 rounded font-bold">Active</span>
                 </button>
               </li>
               <li>

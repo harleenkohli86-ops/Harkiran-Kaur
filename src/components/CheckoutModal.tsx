@@ -60,8 +60,11 @@ export const CheckoutModal: React.FC = () => {
   const [couponInput, setCouponInput] = useState('');
   const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApplyCoupon = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!couponInput.trim()) return;
     const res = applyCoupon(couponInput.trim());
     if (res.success) {
@@ -317,19 +320,21 @@ export const CheckoutModal: React.FC = () => {
       setIsProcessing(false);
 
       if (res.success) {
-        if (user) {
-          submitStudentCoursePayment({
-            studentId: user.studentId || user.id,
-            courseId: cartItems[0]?.product.id || 'cs-mentorship',
-            courseName: courseTitle,
-            amount: subtotal,
-            discountCode: couponCode || undefined,
-            discountAmount: discountAmount || 0,
-            finalAmount: totalAmount,
-            paymentMethod: 'UPI',
-            transactionRef: validation.cleanedUtr,
-          });
-        }
+        submitStudentCoursePayment({
+          studentId: user?.studentId || user?.id || `std_${billing.phone.replace(/\D/g, '') || Date.now()}`,
+          email: billing.email,
+          fullName: billing.fullName,
+          phone: billing.phone,
+          courseId: cartItems[0]?.product.id || 'cs-mentorship',
+          courseName: courseTitle,
+          amount: subtotal,
+          discountCode: couponCode || undefined,
+          discountAmount: discountAmount || 0,
+          finalAmount: totalAmount,
+          paymentMethod: 'UPI',
+          transactionRef: validation.cleanedUtr,
+          paymentProofNotes: `Direct UPI transfer submitted with UTR: ${validation.cleanedUtr}`,
+        });
         setIsCheckoutModalOpen(false);
       } else {
         setPaymentError(res.message);
@@ -700,7 +705,7 @@ export const CheckoutModal: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Tag className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
@@ -710,18 +715,25 @@ export const CheckoutModal: React.FC = () => {
                         setCouponInput(e.target.value);
                         if (couponMessage) setCouponMessage(null);
                       }}
-                      placeholder="ENTER COUPON CODE (e.g. AIR1, RANKER15, HK5)"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon(e);
+                        }
+                      }}
+                      placeholder="ENTER COUPON CODE"
                       className="w-full pl-9 pr-3 py-2.5 bg-black/60 border border-white/15 focus:border-[#C8A45D] rounded-xl text-xs text-white placeholder-gray-500 uppercase tracking-wider focus:outline-none transition-all"
                     />
                   </div>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleApplyCoupon}
                     disabled={!couponInput.trim()}
                     className="px-5 py-2.5 bg-[#C8A45D] hover:bg-[#DFB96E] disabled:opacity-40 disabled:hover:bg-[#C8A45D] text-black font-montserrat font-bold text-xs rounded-xl shadow transition-all cursor-pointer uppercase tracking-wider shrink-0"
                   >
                     Apply
                   </button>
-                </form>
+                </div>
               )}
 
               {couponMessage && (

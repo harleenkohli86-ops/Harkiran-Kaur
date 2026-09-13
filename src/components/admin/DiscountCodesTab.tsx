@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { DiscountCodeRecord } from '../../services/centralStudentDatabase';
+import {
+  DiscountCodeRecord,
+  addCustomDiscountCode,
+  toggleDiscountCodeStatus,
+  resetOrDeleteDiscountCode,
+} from '../../services/centralStudentDatabase';
 import {
   Tag,
   Copy,
@@ -10,6 +15,11 @@ import {
   Percent,
   ShieldCheck,
   Award,
+  Plus,
+  Trash2,
+  RotateCcw,
+  Power,
+  Sparkles,
 } from 'lucide-react';
 
 interface DiscountCodesTabProps {
@@ -21,7 +31,13 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
   const [filter, setFilter] = useState<'all' | 'unused' | 'used'>('all');
   const [search, setSearch] = useState('');
 
-  const unusedCount = discountCodes.filter((c) => !c.isUsed).length;
+  // Create Code Form State
+  const [newCode, setNewCode] = useState('');
+  const [newPercent, setNewPercent] = useState<number>(15);
+  const [isMultiUse, setIsMultiUse] = useState(false);
+  const [creationToast, setCreationToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const unusedCount = discountCodes.filter((c) => !c.isUsed && c.isActive !== false).length;
   const usedCount = discountCodes.filter((c) => c.isUsed).length;
 
   const handleCopy = (code: string) => {
@@ -30,14 +46,41 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleCreateCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCode.trim()) return;
+    const res = addCustomDiscountCode(newCode.trim(), newPercent, isMultiUse);
+    setCreationToast({ type: res.success ? 'success' : 'error', message: res.message });
+    if (res.success) {
+      setNewCode('');
+    }
+    setTimeout(() => setCreationToast(null), 4000);
+  };
+
+  const handleToggleActive = (code: string) => {
+    toggleDiscountCodeStatus(code);
+  };
+
+  const handleResetRedeemed = (code: string) => {
+    if (window.confirm(`Reset redeemed status for ${code}? It will be ready for student checkout again.`)) {
+      resetOrDeleteDiscountCode(code, false);
+    }
+  };
+
+  const handleDeleteCode = (code: string) => {
+    if (window.confirm(`Permanently delete promo code ${code}?`)) {
+      resetOrDeleteDiscountCode(code, true);
+    }
+  };
+
   const filteredCodes = discountCodes.filter((c) => {
-    if (filter === 'unused' && c.isUsed) return false;
+    if (filter === 'unused' && (c.isUsed || c.isActive === false)) return false;
     if (filter === 'used' && !c.isUsed) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      const studentName = c.usedByStudentName || (c as any).usedByName || '';
+      const studentName = c.usedByStudentName || '';
       const email = c.usedByEmail || '';
-      const orderId = c.usedWithOrderId || (c as any).orderId || '';
+      const orderId = c.usedWithOrderId || '';
       return (
         c.code.toLowerCase().includes(q) ||
         studentName.toLowerCase().includes(q) ||
@@ -60,14 +103,14 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
             <div className="text-[10px] uppercase font-montserrat font-bold text-[#FFE3A0] tracking-wider flex items-center gap-1.5">
               <span>Security & Audit Control</span>
               <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[9px]">
-                One-Time Redemptions
+                Promo Management
               </span>
             </div>
             <h2 className="font-cinzel text-base sm:text-lg font-bold text-white mt-0.5">
-              Ranker Discount Codes &amp; HK5 (Audit Trail)
+              Ranker Promo Codes &amp; HK5 (Strict No-Stacking)
             </h2>
             <p className="text-xs text-gray-400">
-              Exclusive 15% Ranker codes and 5% HK5 code. Strictly one coupon per order (no stacking). Once redeemed, the code is locked permanently to the student order ID.
+              Manage 15% Ranker codes, 5% HK5 code, and custom vouchers. Only one coupon allowed per checkout order.
             </p>
           </div>
         </div>
@@ -107,6 +150,85 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
         </div>
       </div>
 
+      {/* Admin Creator Panel */}
+      <div className="bg-white border border-[#C8A45D]/30 p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Plus className="w-4 h-4 text-[#8A651E]" />
+            <h3 className="font-cinzel text-xs sm:text-sm font-bold text-[#0F0F0F] uppercase tracking-wider">
+              Create New Promo / Voucher Code
+            </h3>
+          </div>
+          <span className="text-[10px] text-gray-500">Case-insensitive • Instant Checkout Application</span>
+        </div>
+
+        <form onSubmit={handleCreateCoupon} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Coupon Code</label>
+            <input
+              type="text"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+              placeholder="e.g. SPECIAL15"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs uppercase font-mono font-bold focus:outline-none focus:border-[#C8A45D]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Discount %</label>
+            <select
+              value={newPercent}
+              onChange={(e) => setNewPercent(Number(e.target.value))}
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#C8A45D] cursor-pointer"
+            >
+              <option value={5}>5% Flat OFF</option>
+              <option value={10}>10% Flat OFF</option>
+              <option value={15}>15% Ranker Discount</option>
+              <option value={20}>20% Flat OFF</option>
+              <option value={25}>25% Special Discount</option>
+            </select>
+          </div>
+
+          <div className="flex items-end pb-2">
+            <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isMultiUse}
+                onChange={(e) => setIsMultiUse(e.target.checked)}
+                className="w-4 h-4 text-[#C8A45D] rounded border-gray-300 focus:ring-[#C8A45D]"
+              />
+              <span className="font-medium text-[11px]">Multi-Use (Reusable by all students)</span>
+            </label>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={!newCode.trim()}
+              className="w-full py-2 px-4 bg-gradient-to-r from-[#C8A45D] to-[#DFB96E] hover:brightness-105 disabled:opacity-40 text-black font-montserrat font-bold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Coupon</span>
+            </button>
+          </div>
+        </form>
+
+        {creationToast && (
+          <div
+            className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 ${
+              creationToast.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'
+            }`}
+          >
+            {creationToast.type === 'success' ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <Tag className="w-3.5 h-3.5 text-rose-600" />
+            )}
+            <span>{creationToast.message}</span>
+          </div>
+        )}
+      </div>
+
       {/* Search Input */}
       <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
@@ -132,18 +254,24 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
                 <th className="py-3.5 px-4 text-center">Status</th>
                 <th className="py-3.5 px-4">Redeemed By Student</th>
                 <th className="py-3.5 px-4">Order ID & Date</th>
-                <th className="py-3.5 px-4 text-right">Action</th>
+                <th className="py-3.5 px-4 text-right">Admin Controls</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {filteredCodes.map((c) => {
                 const isCopied = copiedCode === c.code;
+                const isMulti = c.code === 'HK5' || c.isPermanentMultiUse;
+                const isInactive = c.isActive === false;
 
                 return (
                   <tr
                     key={c.code}
                     className={`transition-colors hover:bg-gray-50/80 ${
-                      c.isUsed ? 'bg-gray-50/50 text-gray-500' : 'text-gray-900'
+                      isInactive
+                        ? 'bg-gray-100/70 text-gray-400'
+                        : c.isUsed && !isMulti
+                        ? 'bg-gray-50/50 text-gray-500'
+                        : 'text-gray-900'
                     }`}
                   >
                     {/* Code */}
@@ -173,12 +301,21 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
 
                     {/* Value */}
                     <td className="py-3.5 px-4 font-montserrat font-bold text-xs text-[#8A651E]">
-                      {c.discountPercent || (c as any).discountPercentage}% OFF Flat
+                      <div>{c.discountPercent}% OFF Flat</div>
+                      {isMulti && (
+                        <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 bg-blue-50 text-blue-700 rounded border border-blue-200 font-semibold">
+                          Multi-Use
+                        </span>
+                      )}
                     </td>
 
                     {/* Status */}
                     <td className="py-3.5 px-4 text-center">
-                      {c.isUsed ? (
+                      {isInactive ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-200 text-gray-700 border border-gray-300">
+                          <span>Inactive (Paused)</span>
+                        </span>
+                      ) : c.isUsed && !isMulti ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-300">
                           <span>Redeemed (Locked)</span>
                         </span>
@@ -188,14 +325,19 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
                           <span>Active & Available</span>
                         </span>
                       )}
+                      {(c.usageCount || 0) > 0 && (
+                        <div className="text-[9px] text-gray-500 mt-0.5">
+                          Used: {c.usageCount} time{(c.usageCount || 0) > 1 ? 's' : ''}
+                        </div>
+                      )}
                     </td>
 
                     {/* Redeemed By */}
                     <td className="py-3.5 px-4">
-                      {c.isUsed ? (
+                      {c.usedByStudentName ? (
                         <div>
                           <div className="font-bold text-gray-900 text-xs">
-                            {c.usedByStudentName || (c as any).usedByName || 'Verified Student'}
+                            {c.usedByStudentName}
                           </div>
                           <div className="text-[10px] text-gray-500 font-mono">
                             {c.usedByEmail || '—'}
@@ -210,10 +352,10 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
 
                     {/* Order Details */}
                     <td className="py-3.5 px-4 text-gray-600 text-[11px]">
-                      {c.isUsed ? (
+                      {c.usedWithOrderId ? (
                         <div>
                           <div className="font-mono text-gray-800 text-[10px] font-bold">
-                            {c.usedWithOrderId || (c as any).orderId || '—'}
+                            {c.usedWithOrderId}
                           </div>
                           <div className="text-[10px] text-gray-400">
                             {c.usedAt
@@ -232,12 +374,37 @@ export const DiscountCodesTab: React.FC<DiscountCodesTabProps> = ({ discountCode
 
                     {/* Action */}
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => handleCopy(c.code)}
-                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-                      >
-                        {isCopied ? 'Copied' : 'Copy Code'}
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleToggleActive(c.code)}
+                          className={`p-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            isInactive
+                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title={isInactive ? 'Activate coupon' : 'Pause / deactivate coupon'}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </button>
+
+                        {c.isUsed && !isMulti && (
+                          <button
+                            onClick={() => handleResetRedeemed(c.code)}
+                            className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            title="Reset code to unredeemed state"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleDeleteCode(c.code)}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          title="Delete code"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

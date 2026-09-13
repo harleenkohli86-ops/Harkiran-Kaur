@@ -752,6 +752,279 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
           </div>
+
+          {/* HK StudyTrack Pro – CS Progress Index (Self-Study Tracking Product) */}
+          <div className="pt-6 border-t border-[#C8A45D]/30 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-montserrat font-bold text-[#C8A45D] uppercase tracking-widest block">
+                  Self-Study Syllabus &amp; Revision Index
+                </span>
+                <h4 className="font-cinzel text-xl sm:text-2xl font-bold text-white">
+                  HK StudyTrack Pro – CS Progress Index
+                </h4>
+              </div>
+              <span className="text-xs bg-amber-500/20 text-[#FFE3A0] border border-amber-500/40 px-3 py-1 rounded-full font-bold self-start sm:self-auto">
+                100% Student-Editable in Portal &bull; From ₹699/-
+              </span>
+            </div>
+
+            {/* Featured Graphic Spotlight */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-[#171512] to-[#0D0C0A] border-2 border-[#C8A45D]/50 rounded-2xl flex flex-col md:flex-row items-center gap-5 shadow-xl">
+              <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden border border-[#C8A45D]/40 shrink-0 relative group">
+                <img
+                  src="/src/assets/images/hk_studytrack_pro_graphic_1789259325801.jpg"
+                  alt="HK StudyTrack Pro Console Graphic"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/80 text-[#FFE3A0] border border-[#C8A45D]/50 text-[9px] font-bold rounded-full">
+                  AIR 3 Pro Tracker
+                </div>
+              </div>
+
+              <div className="space-y-2 flex-1 text-center md:text-left">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <span className="px-2.5 py-0.5 bg-[#C8A45D]/20 text-[#FFE3A0] text-[10px] font-extrabold rounded-full uppercase">
+                    Interactive Syllabus Mapping
+                  </span>
+                  <span className="text-[11px] text-gray-400">Official ICSI Syllabus Mapping</span>
+                </div>
+                <h5 className="font-cinzel text-base sm:text-lg font-bold text-white">
+                  Portable Index Simulator &amp; Revision Console
+                </h5>
+                <p className="text-xs text-gray-300 font-poppins leading-relaxed">
+                  Audit your lectures, verify 3-stage revision milestones, check chapter weightage, and flag tricky doubts. Available for instant tracking in your personal Student Portal.
+                </p>
+              </div>
+            </div>
+
+            {/* 7 Official Product Cards for HK StudyTrack Pro */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
+              {/* 1. CSEET */}
+              <div className="p-4 bg-gradient-to-b from-[#1C1A16] to-[#12110F] border border-emerald-500/30 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                <div className="space-y-1.5">
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded uppercase">
+                    CSEET (Level 1)
+                  </span>
+                  <h5 className="font-cinzel text-sm font-bold text-white">Full CSEET Index</h5>
+                  <p className="text-[11px] text-gray-400">All 4 ICSI Foundation Papers with full chapter index &amp; revision milestones.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹699/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹1,499</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-cseet'))}
+                      className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-cseet'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹699</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Executive Group 1 */}
+              <div className="p-4 bg-gradient-to-b from-[#1C1A16] to-[#12110F] border border-amber-500/30 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                <div className="space-y-1.5">
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] font-bold rounded uppercase">
+                    CS Executive Group 1
+                  </span>
+                  <h5 className="font-cinzel text-sm font-bold text-white">Executive Group 1 Index</h5>
+                  <p className="text-[11px] text-gray-400">JIGL, Company Law, SBLL, CAFM complete chapter tracker.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹899/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹1,999</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-exec-g1'))}
+                      className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-exec-g1'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹899</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Executive Group 2 */}
+              <div className="p-4 bg-gradient-to-b from-[#1C1A16] to-[#12110F] border border-amber-500/30 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                <div className="space-y-1.5">
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] font-bold rounded uppercase">
+                    CS Executive Group 2
+                  </span>
+                  <h5 className="font-cinzel text-sm font-bold text-white">Executive Group 2 Index</h5>
+                  <p className="text-[11px] text-gray-400">CMSL, ECIPL, Tax Laws complete chapter tracker.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹799/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹1,799</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-exec-g2'))}
+                      className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-exec-g2'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹799</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Executive Both Groups */}
+              <div className="p-4 bg-gradient-to-b from-[#241F16] to-[#16130E] border-2 border-[#C8A45D] rounded-2xl flex flex-col justify-between space-y-3 shadow-lg">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded uppercase">
+                      Executive Both Groups
+                    </span>
+                    <span className="text-[9px] text-emerald-400 font-bold">Best Value</span>
+                  </div>
+                  <h5 className="font-cinzel text-sm font-bold text-[#FFE3A0]">Combined Index (G1+G2)</h5>
+                  <p className="text-[11px] text-gray-300">All 7 Executive papers combined tracker with dual group mastery index.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹1,499/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹2,999</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-exec-both'))}
+                      className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-exec-both'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹1,499</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Professional Group 1 */}
+              <div className="p-4 bg-gradient-to-b from-[#1C1A16] to-[#12110F] border border-purple-500/30 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                <div className="space-y-1.5">
+                  <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-bold rounded uppercase">
+                    Professional Group 1
+                  </span>
+                  <h5 className="font-cinzel text-sm font-bold text-white">Professional Group 1 Index</h5>
+                  <p className="text-[11px] text-gray-400">ESG, Drafting &amp; Pleadings, Compliance &amp; Audit, Elective 1.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹999/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹2,199</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-prof-g1'))}
+                      className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-prof-g1'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹999</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Professional Group 2 */}
+              <div className="p-4 bg-gradient-to-b from-[#1C1A16] to-[#12110F] border border-purple-500/30 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                <div className="space-y-1.5">
+                  <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-bold rounded uppercase">
+                    Professional Group 2
+                  </span>
+                  <h5 className="font-cinzel text-sm font-bold text-white">Professional Group 2 Index</h5>
+                  <p className="text-[11px] text-gray-400">Strategic Management, Corporate Restructuring &amp; IBC, Elective 2.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹899/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹1,999</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-prof-g2'))}
+                      className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10.5px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-prof-g2'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[10.5px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy ₹899</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Professional Both Groups */}
+              <div className="p-4 bg-gradient-to-b from-[#241F16] to-[#16130E] border-2 border-[#C8A45D] rounded-2xl flex flex-col justify-between space-y-3 shadow-lg sm:col-span-2 lg:col-span-2">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded uppercase">
+                      Professional Both Groups
+                    </span>
+                    <span className="text-[9px] text-emerald-400 font-bold">Comprehensive Ranker Blueprint</span>
+                  </div>
+                  <h5 className="font-cinzel text-sm font-bold text-[#FFE3A0]">Professional Combined Index (Both Groups)</h5>
+                  <p className="text-[11px] text-gray-300">All 7 Professional syllabus papers combined with complete revision tracking.</p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-cinzel text-xl font-extrabold text-[#FFE3A0]">₹1,699/-</span>
+                    <span className="text-[10px] text-gray-400 line-through">₹3,499</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => addToCart(getProduct('hk-studytrack-prof-both'))}
+                      className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
+                    </button>
+                    <button
+                      onClick={() => buyNow(getProduct('hk-studytrack-prof-both'))}
+                      className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                    >
+                      <span>Buy Combined ₹1,699</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

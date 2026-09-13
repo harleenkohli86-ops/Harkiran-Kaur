@@ -6,6 +6,7 @@ import { PRODUCTS } from '../data/products';
 import { ProductCard } from '../components/ProductCard';
 import { AnswersheetSubjectModal } from '../components/Modals';
 import { TestSeriesProgramSelector } from '../components/TestSeriesProgramSelector';
+import { HKStudyTrackProSelector } from '../components/HKStudyTrackProSelector';
 import {
   GraduationCap,
   BookOpen,
@@ -34,6 +35,9 @@ import {
   Users,
   MessageSquareText,
   Percent,
+  Download,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react';
 
 interface PageProps {
@@ -208,6 +212,16 @@ export const ProgramsPage: React.FC<PageProps> = ({
             Career Counselling (After 12th)
           </button>
           <button
+            onClick={() => setActiveTab('study-track')}
+            className={`px-4 py-2 rounded-full text-xs font-montserrat font-bold transition-all cursor-pointer ${
+              activeTab === 'study-track'
+                ? 'bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black shadow-md'
+                : 'text-amber-900 hover:text-[#8A651E] hover:bg-[#F8F6F2]'
+            }`}
+          >
+            HK StudyTrack Pro (CS Index)
+          </button>
+          <button
             onClick={() => setActiveTab('test-series')}
             className={`px-4 py-2 rounded-full text-xs font-montserrat font-bold transition-all cursor-pointer ${
               activeTab === 'test-series'
@@ -215,11 +229,11 @@ export const ProgramsPage: React.FC<PageProps> = ({
                 : 'text-gray-700 hover:text-[#8A651E] hover:bg-[#F8F6F2]'
             }`}
           >
-            Answersheet Analysis Report
+            Test Series &amp; Answersheet Report
           </button>
         </div>
 
-        {/* Content Display: Dedicated Selector for Test Series vs Grid for Other Programs */}
+        {/* Content Display: Dedicated Selector for Test Series, HK StudyTrack Pro, vs Grid for Other Programs */}
         {activeTab === 'test-series' ? (
           <div className="space-y-10">
             <TestSeriesProgramSelector onNavigate={onNavigate} />
@@ -243,6 +257,64 @@ export const ProgramsPage: React.FC<PageProps> = ({
                   Full Series Starting Soon
                 </span>
                 <span className="text-[10px] text-gray-400 mt-0.5 block">Currently Enrolling June 2026 Certified Copy Audits</span>
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'study-track' ? (
+          <div className="space-y-10">
+            {/* Dedicated Portable HK StudyTrack Pro Selector with Futuristic Graphic */}
+            <HKStudyTrackProSelector onNavigate={onNavigate} />
+
+            {/* Standalone Product Cards Directory */}
+            <div className="border-t border-[#C8A45D]/30 pt-8">
+              <div className="text-center space-y-2 mb-8">
+                <span className="px-3 py-1 bg-[#C8A45D]/15 text-[#8A651E] text-xs font-bold uppercase rounded-full">
+                  Instant Checkout Directory
+                </span>
+                <h3 className="font-cinzel text-2xl font-bold text-gray-900">
+                  All 7 Official HK StudyTrack Pro Packages
+                </h3>
+                <p className="text-xs text-gray-500 max-w-xl mx-auto">
+                  One-time payment • Lifetime access • 100% student-editable within your personal Student Portal
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ProductCard
+                  product={getProduct('hk-studytrack-cseet')}
+                  onNavigate={onNavigate}
+                  badgeLabel="CSEET Index • ₹699"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-exec-g1')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Exec Group 1 • ₹899"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-exec-g2')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Exec Group 2 • ₹799"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-exec-both')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Exec Combined (G1+G2) • ₹1,499"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-prof-g1')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Prof Group 1 • ₹999"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-prof-g2')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Prof Group 2 • ₹899"
+                />
+                <ProductCard
+                  product={getProduct('hk-studytrack-prof-both')}
+                  onNavigate={onNavigate}
+                  badgeLabel="Prof Combined • ₹1,699"
+                />
               </div>
             </div>
           </div>
@@ -328,6 +400,47 @@ export const ProgramsPage: React.FC<PageProps> = ({
               onNavigate={onNavigate}
               badgeLabel="Career Roadmap (Post 12th)"
             />
+          )}
+
+          {/* 9-15. HK StudyTrack Pro – CS Progress Index Cards */}
+          {activeTab === 'all' && (
+            <>
+              <ProductCard
+                product={getProduct('hk-studytrack-cseet')}
+                onNavigate={onNavigate}
+                badgeLabel="CSEET Index • ₹699"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-exec-g1')}
+                onNavigate={onNavigate}
+                badgeLabel="Exec Group 1 • ₹899"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-exec-g2')}
+                onNavigate={onNavigate}
+                badgeLabel="Exec Group 2 • ₹799"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-exec-both')}
+                onNavigate={onNavigate}
+                badgeLabel="Exec Combined (G1+G2) • ₹1,499"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-prof-g1')}
+                onNavigate={onNavigate}
+                badgeLabel="Prof Group 1 • ₹999"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-prof-g2')}
+                onNavigate={onNavigate}
+                badgeLabel="Prof Group 2 • ₹899"
+              />
+              <ProductCard
+                product={getProduct('hk-studytrack-prof-both')}
+                onNavigate={onNavigate}
+                badgeLabel="Prof Combined • ₹1,699"
+              />
+            </>
           )}
         </div>
         )}
@@ -1135,6 +1248,278 @@ export const TestSeriesPage: React.FC<PageProps> = ({
                 1-on-1 Evaluation by AIR 3 Harkiran Kaur • 48-72h Turnaround
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DEDICATED JUNE 2026 STRATEGIC ANALYSIS & PREPARATION BLUEPRINT */}
+      <div className="space-y-12 pt-8 border-t-2 border-[#C8A45D]/20">
+        {/* Section Header */}
+        <div className="text-center space-y-3 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF8F5] border border-[#C8A45D]/50 text-[#8A651E] text-xs font-montserrat font-bold">
+            <TrendingUp className="w-3.5 h-3.5 text-[#C8A45D]" />
+            <span>EXECUTIVE & PROFESSIONAL PREPARATION ROADMAP</span>
+          </div>
+          <h2 className="font-cinzel text-2xl sm:text-4xl font-extrabold text-[#0F0F0F]">
+            June 2026 Strategic Guidance & <span className="text-[#8A651E]">Scoring Blueprint</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-600 font-poppins max-w-2xl mx-auto">
+            A comprehensive diagnostic by <strong>AIR 3 Harkiran Kaur Kohli</strong> breaking down the ICSI evaluation criteria, statutory presentation standards, and the 4-phase timeline to secure 60+ exemptions in June 2026.
+          </p>
+        </div>
+
+        {/* 3 Key Diagnostic Findings */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 bg-white border border-[#C8A45D]/30 rounded-3xl shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-bold text-base">
+              78%
+            </div>
+            <h3 className="font-cinzel text-base font-bold text-gray-900">
+              The 35–39 "Danger Zone" Trap
+            </h3>
+            <p className="text-xs text-gray-600 font-poppins leading-relaxed">
+              Most students fail not from lack of study, but because answers lack statutory precision. Evaluators deduct 1–2 marks per question when section numbers, sub-rules, and legal case principles are missing.
+            </p>
+          </div>
+
+          <div className="p-6 bg-white border border-[#C8A45D]/30 rounded-3xl shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-[#8A651E] flex items-center justify-center font-bold text-base">
+              4-Part
+            </div>
+            <h3 className="font-cinzel text-base font-bold text-gray-900">
+              Mandatory ICSI Drafting Structure
+            </h3>
+            <p className="text-xs text-gray-600 font-poppins leading-relaxed">
+              To score 4/5 or 5/5, answers must strictly follow: <strong>(1) Applicable Legal Provisions</strong>, <strong>(2) Relevant Landmark Precedents</strong>, <strong>(3) Factual Correlation</strong>, and <strong>(4) Final Legal Conclusion</strong>.
+            </p>
+          </div>
+
+          <div className="p-6 bg-white border border-[#C8A45D]/30 rounded-3xl shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-base">
+              60+
+            </div>
+            <h3 className="font-cinzel text-base font-bold text-gray-900">
+              Exemption Target Strategy
+            </h3>
+            <p className="text-xs text-gray-600 font-poppins leading-relaxed">
+              Aim for 60+ exemption in at least two papers per module to offset aggregate shortfalls. Focus heavily on high-weightage chapters representing 65% of paper marks.
+            </p>
+          </div>
+        </div>
+
+        {/* 4-Phase Milestone Timeline for June 2026 */}
+        <div className="p-6 sm:p-8 bg-[#FAF8F5] border border-[#C8A45D]/40 rounded-3xl space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-montserrat font-bold text-[#8A651E] uppercase tracking-wider block">
+                Preparation Calendar
+              </span>
+              <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">
+                4-Phase Milestone Roadmap for June 2026
+              </h3>
+            </div>
+            <button
+              onClick={() => {
+                const text = `HK RANKERS - JUNE 2026 STRATEGY BLUEPRINT\n\n` +
+                  `Phase 1 (Months 1-2): Foundation & ICSI Study Material Alignment\n` +
+                  `- 100% syllabus reading using the official ICSI module\n` +
+                  `- Prepare short statutory definition cards and section charts\n\n` +
+                  `Phase 2 (Month 3): High-Yield Chapter Deep Dive & Scanner Practice\n` +
+                  `- Solve 5 past exam scanner questions per chapter\n` +
+                  `- Practice drafted case law questions under timed conditions\n\n` +
+                  `Phase 3 (Month 4): Certified Copy Audit & Remedial Action\n` +
+                  `- Submit previous attempt answersheets for line-by-line mark audit\n` +
+                  `- Fix mark loss in step-marking, sub-clauses, and presentation\n\n` +
+                  `Phase 4 (Final 30 Days): 3-Hour Exam Simulation & Revision\n` +
+                  `- Write 3 full 100-mark mock tests per subject\n` +
+                  `- Review ICSI model answers and benchmark time management`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'June_2026_ICSI_Preparation_Blueprint.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-4 py-2 bg-white hover:bg-stone-50 border border-[#C8A45D] text-[#8A651E] rounded-xl text-xs font-montserrat font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer w-fit"
+            >
+              <Download className="w-4 h-4 text-[#C8A45D]" />
+              <span>Download Preparation Blueprint</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-[#8A651E]">
+                <span>Phase 1</span>
+                <span className="px-2 py-0.5 bg-amber-50 rounded-md border border-[#C8A45D]/30">Months 1 & 2</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm">Module Alignment & Concept Deep-Dive</h4>
+              <p className="text-[11px] text-gray-600 leading-relaxed font-poppins">
+                Complete thorough 1st reading of ICSI study material. Mark key statutory definitions and prepare handwritten formula/section charts.
+              </p>
+            </div>
+
+            <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-[#8A651E]">
+                <span>Phase 2</span>
+                <span className="px-2 py-0.5 bg-amber-50 rounded-md border border-[#C8A45D]/30">Month 3</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm">Scanner Solving & Legal Drafting</h4>
+              <p className="text-[11px] text-gray-600 leading-relaxed font-poppins">
+                Solve past 5 examination papers topic-by-topic. Transition from passive reading to active statutory drafting of case problem answers.
+              </p>
+            </div>
+
+            <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-[#8A651E]">
+                <span>Phase 3</span>
+                <span className="px-2 py-0.5 bg-amber-50 rounded-md border border-[#C8A45D]/30">Month 4</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm">Certified Copy Audit & Remedial Plan</h4>
+              <p className="text-[11px] text-gray-600 leading-relaxed font-poppins">
+                Get your ICSI answersheets evaluated line-by-line by AIR 3 to diagnose exact deduction causes and implement targeted drafting fixes.
+              </p>
+            </div>
+
+            <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-[#8A651E]">
+                <span>Phase 4</span>
+                <span className="px-2 py-0.5 bg-amber-50 rounded-md border border-[#C8A45D]/30">Final 30 Days</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm">Full 3-Hour Simulated Mock Tests</h4>
+              <p className="text-[11px] text-gray-600 leading-relaxed font-poppins">
+                Simulate 3 real exam-condition 100-mark mock tests. Perfect speed, section indexing, handwriting legibility, and aggregate optimization.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* High-Yield Chapter Weightage Matrix */}
+        <div className="p-6 sm:p-8 bg-white border border-[#C8A45D]/40 rounded-3xl space-y-6 shadow-sm">
+          <div>
+            <span className="text-xs font-montserrat font-bold text-[#8A651E] uppercase tracking-wider block">
+              Syllabus 2022 Focus
+            </span>
+            <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">
+              High-Yield Subjects & Chapter Weightage Guide
+            </h3>
+            <p className="text-xs text-gray-600 mt-1 font-poppins">
+              Prioritize these core scoring chapters carrying between 60% and 70% of total examination weightage.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Company Law & Practice</span>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Executive G1</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: General Meetings (SS-2), Board Meetings (SS-1), Directors & KMP, Accounts & Audit, Compromises & Arrangements.
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 65+ marks from core corporate governance chapters.
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Jurisprudence & Legal Laws (JIGL)</span>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Executive G1</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: Interpretation of Statutes, Constitution of India (Fundamental Rights), CPC, CrPC, Law of Torts, Limitation Act.
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 50+ marks from administrative & statutory interpretation.
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Capital Markets & Securities (CMSL)</span>
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-bold rounded-full">Executive G2</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: SEBI (ICDR) Regulations, SEBI (LODR), SEBI (PIT) Insider Trading, Takeover Code (SAST), Depositories Act.
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 60+ marks from SEBI regulations & listed entity compliance.
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Tax Laws & Practice</span>
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-bold rounded-full">Executive G2</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: Heads of Income (Profits from Business/Profession & Capital Gains), TDS/TCS, GST Input Tax Credit & Time of Supply.
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 50 marks Direct Tax + 50 marks Indirect Tax (GST & Customs).
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Drafting, Pleadings & Appearances</span>
+                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded-full">Professional G1</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: General Principles of Drafting, Commercial Contracts, Company Law Petitions before NCLT, Writ Petitions, Appeals.
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 70+ marks on drafting precision & clause architecture.
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#FAF8F5] border border-gray-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-[#0F0F0F]">Corporate Restructuring & Insolvency</span>
+                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-bold rounded-full">Professional G2</span>
+              </div>
+              <p className="text-xs text-gray-600 font-poppins">
+                Focus: Mergers & Amalgamations, Demergers, Cross-Border Mergers, IBC 2016 (CIRP, Liquidation, Resolution Plans).
+              </p>
+              <div className="text-[11px] font-bold text-[#8A651E] pt-1">
+                Typical Weightage: 50 marks M&A + 50 marks Insolvency Code.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Strategic Guidance Call to Action Bar */}
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#1C1917] via-[#2A241C] to-[#1C1917] border-2 border-[#C8A45D] rounded-3xl text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-1.5 text-center md:text-left">
+            <span className="px-3 py-0.5 bg-[#C8A45D]/20 text-[#FFE3A0] text-xs font-montserrat font-bold rounded-full inline-block">
+              Free 1-on-1 Guidance
+            </span>
+            <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-white">
+              Not Sure Which Subjects to Prioritize for June 2026?
+            </h3>
+            <p className="text-xs text-gray-300 font-poppins max-w-xl">
+              Book a complimentary diagnostic session with AIR 3 Harkiran Kaur to review your target groups, syllabus status, and create a customized daily study schedule.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
+            <button
+              onClick={onOpenCounsellingModal}
+              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] hover:brightness-105 text-black font-montserrat font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <PhoneCall className="w-4 h-4 text-black" />
+              <span>Book Free Strategy Call</span>
+            </button>
+            <button
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto px-5 py-3 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-montserrat font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Audit Certified Copy (₹699)</span>
+            </button>
           </div>
         </div>
       </div>

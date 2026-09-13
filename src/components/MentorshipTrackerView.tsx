@@ -365,18 +365,16 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
-  // Toggle Red marking on Chapter No (Admin or Student in Self-Study mode)
+  // Toggle Red marking on Chapter No (Admin, Self-Study, or Mentorship student doubt flag)
   const handleToggleChapterRed = (rowId: string) => {
-    if (!canEdit) return;
     const updatedRows = profile.trackerRows.map((r) =>
       r.id === rowId ? { ...r, isChapterRed: !r.isChapterRed } : r
     );
     persistChange({ ...profile, trackerRows: updatedRows });
   };
 
-  // Toggle Red marking on Topic (Admin or Student in Self-Study mode)
+  // Toggle Red marking on Topic (Admin, Self-Study, or Mentorship student doubt flag)
   const handleToggleTopicRed = (rowId: string) => {
-    if (!canEdit) return;
     const updatedRows = profile.trackerRows.map((r) =>
       r.id === rowId ? { ...r, isTopicRed: !r.isTopicRed } : r
     );
@@ -761,7 +759,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
                 Admin-Controlled Mentorship Tracker
               </h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                As part of your 1-on-1 Mentorship with CS Harkiran Kaur (AIR 3), your progress, test reviews, and revision milestones are audited and updated by your mentor during monthly calls.
+                As part of your 1-on-1 Mentorship with Harkiran Kaur (AIR 3), your progress, test reviews, and revision milestones are audited and updated by your mentor during monthly calls.
               </p>
             </div>
           </div>
@@ -844,7 +842,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
                 </h3>
               </div>
               <p className="text-xs text-gray-600">
-                Exclusive 25-Seat Personal Guidance Architecture curated by <strong>CS Harkiran Kaur (AIR 3)</strong>
+                Exclusive 25-Seat Personal Guidance Architecture curated by <strong>Harkiran Kaur (AIR 3)</strong>
               </p>
             </div>
             <span className="px-3 py-1 bg-[#C8A45D] text-black font-montserrat font-black text-xs rounded-xl shadow-sm">
@@ -957,7 +955,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
             <p className="text-xs text-gray-600 pt-0.5">
               {isAdmin
                 ? 'Admin: Click Chapter No or Topic to toggle RED highlight. Click statuses to cycle values.'
-                : 'Strictly View-Only: Progress updated by CS Harkiran Kaur and evaluation panel.'}
+                : 'Strictly View-Only: Progress updated by Harkiran Kaur and evaluation panel.'}
             </p>
           </div>
 
@@ -1264,7 +1262,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
                                   ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm'
                                   : 'bg-gray-100 text-gray-600 hover:bg-rose-50 hover:text-rose-700 border border-gray-200'
                               }`}
-                              title={isAdmin ? "Admin: Click to toggle Chapter No in RED" : "Toggle chapter importance in RED"}
+                              title={isAdmin ? "Admin: Click to toggle Chapter No in RED" : "Toggle chapter doubt / high-yield marker in RED"}
                             >
                               {row.isChapterRed ? '🔴 Marked Red' : '⚪ Turn Red'}
                             </button>
@@ -1333,7 +1331,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
                                     ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm'
                                     : 'bg-gray-100 text-gray-600 hover:bg-rose-50 hover:text-rose-700 border border-gray-200'
                                 }`}
-                                title={isAdmin ? "Admin: Click to toggle Topic in RED" : "Toggle topic importance in RED"}
+                                title={isAdmin ? "Admin: Click to toggle Topic in RED" : "Toggle topic doubt / high-priority in RED"}
                               >
                                 {row.isTopicRed ? '🔥 Topic Red' : '🔴 Turn Red'}
                               </button>
@@ -1709,7 +1707,7 @@ export const MentorshipTrackerView: React.FC<MentorshipTrackerViewProps> = ({
                   Enrolled Program & Group: <strong className="text-gray-900">{profile.program} ({profile.group}) — {profile.level}</strong>. 
                   {isAdmin
                     ? ' Admin Portal: You have full access to schedule, update call status, and record mentor diagnostic notes.'
-                    : ' Student Portal: Strictly view-only. 48 1-on-1 personalized sessions across 12 months with CS Harkiran Kaur (AIR 3).'}
+                    : ' Student Portal: Strictly view-only. 48 1-on-1 personalized sessions across 12 months with Harkiran Kaur (AIR 3).'}
                 </p>
               </div>
             </div>

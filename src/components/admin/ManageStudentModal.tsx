@@ -99,7 +99,7 @@ export const ManageStudentModal: React.FC<ManageStudentModalProps> = ({
     const cleanPhone = student.phone.replace(/\D/g, '');
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     const text = encodeURIComponent(
-      `Hello ${student.fullName}! This is CS Harkiran Kaur from HK Code of Rankers. I am checking in regarding your CS preparation.`
+      `Hello ${student.fullName}! This is Harkiran Kaur from HK Code of Rankers. I am checking in regarding your CS preparation.`
     );
     window.open(`https://wa.me/${phoneWithCountry}?text=${text}`, '_blank');
   };

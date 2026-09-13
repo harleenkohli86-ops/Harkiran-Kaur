@@ -1,11 +1,11 @@
 /**
  * HK Code of Rankers — Direct UPI Payment Service
- * Payee Name: Harkiran kaur jatinder singh kohli
+ * Payee Name: Harkiran Kaur
  * UPI ID: harkirankaurr@ibl
  */
 
 export const UPI_PAYEE_CONFIG = {
-  accountName: 'Harkiran kaur jatinder singh kohli',
+  accountName: 'Harkiran Kaur',
   upiId: 'harkirankaurr@ibl',
   merchantCode: '8299', // Educational Services
   academyName: 'HK Code of Rankers',

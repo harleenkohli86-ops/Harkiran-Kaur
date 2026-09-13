@@ -25,6 +25,7 @@ import {
 import {
   sendStudentConfirmationEmail,
   sendStudentApprovalEmail,
+  sendFreeSlotBookingConfirmationEmail,
   getWhatsAppApprovalUrl,
 } from '../services/emailService';
 import { MentorshipTrackerView } from './MentorshipTrackerView';
@@ -56,6 +57,7 @@ import {
   Search,
   Filter,
   User,
+  Users,
   Phone,
   Mail,
   ShieldCheck,
@@ -109,9 +111,10 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
   const [activeStudent, setActiveStudent] = useState<StudentMentorshipProfile | null>(null);
   const [managingStudent, setManagingStudent] = useState<CentralStudent | null>(null);
   const [managerTab, setManagerTab] = useState<
-    'registrations' | 'payments' | 'slot_bookings' | 'free_slot_bookings' | 'directory' | 'chart' | 'syllabus_index' | 'discount_codes'
+    'registrations' | 'payments' | 'free_slot_bookings' | 'directory' | 'chart' | 'syllabus_index' | 'discount_codes'
   >('registrations');
   const [searchQuery, setSearchQuery] = useState('');
+  const [directoryType, setDirectoryType] = useState<'mentorship' | 'self_paced'>('mentorship');
   const [groupFilter, setGroupFilter] = useState<string>('all');
   const [approvalFilter, setApprovalFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -284,7 +287,7 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
       const cleanPhone = student.phone.replace(/\D/g, '').slice(-10);
       const waUrl = cleanPhone
         ? `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
-            `Hello ${student.fullName}! Your payment for ${courseName} has been verified and approved by CS Harkiran Kaur! 🎉\n\nYour personalized Mentorship Roadmap, Chapter Index, and 12-Month Diagnostic & Strategy Calls are now unlocked in your Student Portal!`
+            `Hello ${student.fullName}! Your payment for ${courseName} has been verified and approved by Harkiran Kaur! 🎉\n\nYour personalized Mentorship Roadmap, Chapter Index, and 12-Month Diagnostic & Strategy Calls are now unlocked in your Student Portal!`
           )}`
         : undefined;
 
@@ -344,9 +347,9 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
     const cleanPhone = phone.startsWith('91') && phone.length === 12 ? phone : `91${phone.slice(-10)}`;
     let message = '';
     if (student.isApproved) {
-      message = `Hello ${student.studentName}! Your HK Code of Rankers registration has been approved by CS Harkiran Kaur! 🎉\n\nYou can now log in to your Student Portal at HK Code of Rankers using your registered email address: ${student.studentEmail || 'your email'}.\n\nIf you haven't set your password yet, use the 'Create / Reset Password' option with this same email.\n\nAll the best for your ${student.program} (${student.group}) journey!`;
+      message = `Hello ${student.studentName}! Your HK Code of Rankers registration has been approved by Harkiran Kaur! 🎉\n\nYou can now log in to your Student Portal at HK Code of Rankers using your registered email address: ${student.studentEmail || 'your email'}.\n\nIf you haven't set your password yet, use the 'Create / Reset Password' option with this same email.\n\nAll the best for your ${student.program} (${student.group}) journey!`;
     } else {
-      message = `Hello ${student.studentName}! This is CS Harkiran Kaur from HK Code of Rankers regarding your ${student.program} (${student.group}) mentorship registration. We are verifying your details for student portal approval.`;
+      message = `Hello ${student.studentName}! This is Harkiran Kaur from HK Code of Rankers regarding your ${student.program} (${student.group}) mentorship registration. We are verifying your details for student portal approval.`;
     }
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');
@@ -366,8 +369,8 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
       ? `Registration Approved - Student Portal Access: ${student.studentName}`
       : `HK Code of Rankers - Registration Verification for ${student.studentName}`;
     const body = student.isApproved
-      ? `Hello ${student.studentName},\n\nYour registration has been approved by CS Harkiran Kaur!\n\nYou can now log in to the HK Code of Rankers portal with your registered email: ${student.studentEmail}.\nUse the 'Create / Reset Password' option if you need to create your password.\n\nWarm regards,\nCS Harkiran Kaur\nHK Code of Rankers`
-      : `Hello ${student.studentName},\n\nWe are reviewing your enrollment details for ${student.program} (${student.group}).\n\nWarm regards,\nCS Harkiran Kaur\nHK Code of Rankers`;
+      ? `Hello ${student.studentName},\n\nYour registration has been approved by Harkiran Kaur!\n\nYou can now log in to the HK Code of Rankers portal with your registered email: ${student.studentEmail}.\nUse the 'Create / Reset Password' option if you need to create your password.\n\nWarm regards,\nHarkiran Kaur\nHK Code of Rankers`
+      : `Hello ${student.studentName},\n\nWe are reviewing your enrollment details for ${student.program} (${student.group}).\n\nWarm regards,\nHarkiran Kaur\nHK Code of Rankers`;
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(student.studentEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(gmailUrl, '_blank', 'noopener,noreferrer');
   };
@@ -443,15 +446,34 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
 
       // 4. Also confirm order/appointment if one matched
       if (appt) {
-        await sendStudentConfirmationEmail({
-          studentEmail: studentEmail || appt.email,
-          studentName: student.studentName,
-          programName,
-          amount: appt?.amount || 2999,
-          utrNumber: utr,
-          orderNumber,
-          studentPhone,
-        }).catch((e) => console.warn('Payment confirmation notice:', e));
+        const isCounsellingOrSlot =
+          appt.status === 'counselling_booking' ||
+          appt.program?.toLowerCase().includes('counselling') ||
+          appt.program?.toLowerCase().includes('slot') ||
+          appt.program?.toLowerCase().includes('guidance');
+
+        if (isCounsellingOrSlot) {
+          // Send Slot Booking Confirmation Email, NEVER Payment Confirmation
+          await sendFreeSlotBookingConfirmationEmail({
+            candidateName: student.studentName,
+            candidateEmail: studentEmail || appt.email || '',
+            candidatePhone: studentPhone,
+            program: programName,
+            preferredSlot: appt.attempt || 'Scheduled by Mentor',
+            bookingId: appt.id,
+            notes: appt.notes,
+          }).catch((e) => console.warn('Slot booking confirmation notice:', e));
+        } else {
+          await sendStudentConfirmationEmail({
+            studentEmail: studentEmail || appt.email,
+            studentName: student.studentName,
+            programName,
+            amount: appt?.amount || 2999,
+            utrNumber: utr,
+            orderNumber,
+            studentPhone,
+          }).catch((e) => console.warn('Payment confirmation notice:', e));
+        }
 
         await updateAppointmentStatus(
           {
@@ -868,8 +890,32 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
     document.body.removeChild(link);
   };
 
-  // Filter students
-  const filteredStudents = students.filter((s) => {
+  // Helper to distinguish Self-Paced Index students from Full Mentorship students
+  const isSelfPacedStudent = (s: StudentMentorshipProfile) => {
+    const centralMatch = centralStudents.find(
+      (cs) =>
+        cs.studentId === s.studentId ||
+        cs.email.toLowerCase() === (s.studentEmail || '').toLowerCase()
+    );
+    return Boolean(
+      s.isStudyProgressIndex ||
+      s.studyIndexAccess ||
+      centralMatch?.studyIndexAccess ||
+      centralMatch?.enrolledProductIds?.some((id) => id.includes('index') || id.includes('progress')) ||
+      centralMatch?.registeredVia === 'study_index' ||
+      s.assignedIndexId?.includes('index')
+    );
+  };
+
+  // Two Separate Student Directories
+  const mentorshipStudents = students.filter((s) => !isSelfPacedStudent(s));
+  const selfPacedStudents = students.filter((s) => isSelfPacedStudent(s));
+
+  // Current directory set based on directoryType
+  const currentDirectoryPool = directoryType === 'mentorship' ? mentorshipStudents : selfPacedStudents;
+
+  // Filter students within the active directory
+  const filteredStudents = currentDirectoryPool.filter((s) => {
     const matchesSearch =
       !searchQuery ||
       s.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -895,13 +941,25 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
     return matchesSearch && matchesGroup && matchesApproval;
   });
 
-  // Aggregate stats
+  // Aggregate stats for Mentorship
+  const totalMentorshipCount = mentorshipStudents.length;
+  const pendingMentorshipCount = mentorshipStudents.filter((s) => !s.isApproved).length;
+  const approvedMentorshipCount = mentorshipStudents.filter((s) => s.isApproved).length;
+  const execG1MentorshipCount = mentorshipStudents.filter((s) => s.program === 'CS Executive' && (s.group === 'Group 1' || s.group === 'Both')).length;
+  const profMentorshipCount = mentorshipStudents.filter((s) => s.program === 'CS Professional').length;
+
+  // Aggregate stats for Self-Paced Index
+  const totalSelfPacedCount = selfPacedStudents.length;
+  const cseetSelfPacedCount = selfPacedStudents.filter((s) => s.program === 'CS EET').length;
+  const execSelfPacedCount = selfPacedStudents.filter((s) => s.program === 'CS Executive').length;
+  const profSelfPacedCount = selfPacedStudents.filter((s) => s.program === 'CS Professional').length;
+
+  // Legacy aliases
   const totalStudents = students.length;
   const pendingCount = students.filter((s) => !s.isApproved).length;
   const approvedCount = students.filter((s) => s.isApproved).length;
-  const execG1Count = students.filter((s) => s.program === 'CS Executive' && (s.group === 'Group 1' || s.group === 'Both')).length;
-  const execG2Count = students.filter((s) => s.program === 'CS Executive' && (s.group === 'Group 2' || s.group === 'Both')).length;
-  const profCount = students.filter((s) => s.program === 'CS Professional').length;
+  const execG1Count = execG1MentorshipCount;
+  const profCount = profMentorshipCount;
 
   const pendingRegistrationsCount = centralStudents.filter(
     (s) => s.registrationStatus === 'pending'
@@ -921,23 +979,6 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
       {/* Sub-Tabs: Unified Admin Bar */}
       <div className="bg-white border-2 border-[#C8A45D]/40 p-2 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            onClick={() => setManagerTab('slot_bookings')}
-            className={`py-2 px-3 rounded-xl text-xs font-montserrat font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              managerTab === 'slot_bookings'
-                ? 'bg-[#1C1917] text-[#FFE3A0] border border-[#C8A45D] shadow-sm'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Calendar className="w-3.5 h-3.5 text-[#C8A45D]" />
-            <span>📅 Slot Bookings</span>
-            {pendingSlotBookingsCount > 0 && (
-              <span className="px-1.5 py-0.2 bg-[#C8A45D] text-black text-[10px] font-bold rounded-full animate-pulse">
-                {pendingSlotBookingsCount}
-              </span>
-            )}
-          </button>
-
           <button
             onClick={() => setManagerTab('free_slot_bookings')}
             className={`py-2 px-3 rounded-xl text-xs font-montserrat font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -1055,11 +1096,6 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
           </button>
         </div>
       </div>
-
-      {/* TAB: SLOT BOOKINGS */}
-      {managerTab === 'slot_bookings' && (
-        <SlotBookingsTab bookings={slotBookings} onRefresh={loadCentralData} />
-      )}
 
       {/* TAB: FREE SESSION BOOKINGS */}
       {managerTab === 'free_slot_bookings' && (
@@ -1179,64 +1215,187 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
       {/* TAB 6: STUDENT ACCOUNTS & DIRECTORY */}
       {managerTab === 'directory' && (
         <div className="space-y-6">
-          {/* Top Quick Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
-              <div className="text-[11px] font-montserrat font-bold text-gray-500 uppercase tracking-wider">
-                Total Enrolled
-              </div>
-              <div className="text-2xl font-cinzel font-bold text-[#1C1917] pt-1">
-                {totalStudents} Students
-              </div>
-              <div className="text-[10px] text-gray-500 pt-0.5">
-                {approvedCount} approved to log in
-              </div>
+          {/* Sub-Directory Selector Tabs: Mentorship vs Self-Paced Index */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-stone-100 rounded-2xl border border-stone-200">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setDirectoryType('mentorship')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-montserrat font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  directoryType === 'mentorship'
+                    ? 'bg-[#1C1917] text-[#FFE3A0] shadow-md border border-[#C8A45D]'
+                    : 'text-gray-700 hover:text-black hover:bg-white/80'
+                }`}
+              >
+                <Users className="w-4 h-4 text-[#C8A45D]" />
+                <span>👥 Mentorship Directory</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A45D]/20 text-[#FFE3A0]">
+                  {totalMentorshipCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setDirectoryType('self_paced')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-montserrat font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  directoryType === 'self_paced'
+                    ? 'bg-[#1C1917] text-[#FFE3A0] shadow-md border border-[#C8A45D]'
+                    : 'text-gray-700 hover:text-black hover:bg-white/80'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-[#C8A45D]" />
+                <span>📑 Self-Paced Index Directory</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C8A45D]/20 text-[#FFE3A0]">
+                  {totalSelfPacedCount}
+                </span>
+              </button>
             </div>
 
-            <div
-              onClick={() => setApprovalFilter(approvalFilter === 'pending' ? 'all' : 'pending')}
-              className={`border p-4 rounded-2xl shadow-sm cursor-pointer transition-all ${
-                pendingCount > 0
-                  ? 'bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20'
-                  : 'bg-white border-gray-200'
-              }`}
-            >
-              <div className="text-[11px] font-montserrat font-bold text-amber-700 uppercase tracking-wider flex items-center justify-between">
-                <span>Pending Approvals</span>
-                {pendingCount > 0 && <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />}
+            {directoryType === 'self_paced' && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-500 font-medium hidden md:inline">
+                  Self-study index with student-editable tracker:
+                </span>
+                <button
+                  onClick={() => {
+                    const newId = `std-self-${Date.now()}`;
+                    const demoStd = getOrCreateStudentMentorship({
+                      id: newId,
+                      fullName: 'Demo Self-Paced Student',
+                      email: `student.${Date.now().toString().slice(-4)}@gmail.com`,
+                      phone: '9876543210',
+                      targetExam: 'CS Executive Group 1',
+                    });
+                    demoStd.isStudyProgressIndex = true;
+                    demoStd.studyIndexAccess = true;
+                    demoStd.isApproved = true;
+                    saveStudentMentorshipProfile(demoStd);
+                    loadStudents();
+                    loadCentralData();
+                    setActionToast({
+                      message: 'Created sample Self-Paced Student with 100% Student-Editable Index!',
+                      type: 'success',
+                    });
+                    setTimeout(() => setActionToast(null), 4000);
+                  }}
+                  className="px-3 py-1.5 bg-white hover:bg-amber-50 border border-[#C8A45D]/60 text-[#8A651E] text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Create a sample enrolled Self-Paced Index student to test student-editable tracker"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Demo Self-Paced Student</span>
+                </button>
               </div>
-              <div className="text-2xl font-cinzel font-bold text-amber-700 pt-1">
-                {pendingCount}
-              </div>
-              <div className="text-[10px] text-amber-800/80 pt-0.5 font-medium">
-                {pendingCount > 0 ? 'Click to filter & approve' : 'All accounts verified'}
-              </div>
-            </div>
-
-            <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
-              <div className="text-[11px] font-montserrat font-bold text-[#8A651E] uppercase tracking-wider">
-                Executive Group 1
-              </div>
-              <div className="text-2xl font-cinzel font-bold text-[#8A651E] pt-1">
-                {execG1Count}
-              </div>
-              <div className="text-[10px] text-gray-500 pt-0.5">
-                Group 1 index isolated
-              </div>
-            </div>
-
-            <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
-              <div className="text-[11px] font-montserrat font-bold text-emerald-800 uppercase tracking-wider">
-                Professional
-              </div>
-              <div className="text-2xl font-cinzel font-bold text-emerald-800 pt-1">
-                {profCount}
-              </div>
-              <div className="text-[10px] text-gray-500 pt-0.5">
-                Prof Group 1 & 2 tracks
-              </div>
-            </div>
+            )}
           </div>
+
+          {/* Top Quick Metrics */}
+          {directoryType === 'mentorship' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-gray-500 uppercase tracking-wider">
+                  Total Mentorship
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-[#1C1917] pt-1">
+                  {totalMentorshipCount} Students
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  {approvedMentorshipCount} approved to log in
+                </div>
+              </div>
+
+              <div
+                onClick={() => setApprovalFilter(approvalFilter === 'pending' ? 'all' : 'pending')}
+                className={`border p-4 rounded-2xl shadow-sm cursor-pointer transition-all ${
+                  pendingMentorshipCount > 0
+                    ? 'bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20'
+                    : 'bg-white border-gray-200'
+                }`}
+              >
+                <div className="text-[11px] font-montserrat font-bold text-amber-700 uppercase tracking-wider flex items-center justify-between">
+                  <span>Pending Approvals</span>
+                  {pendingMentorshipCount > 0 && <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />}
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-amber-700 pt-1">
+                  {pendingMentorshipCount}
+                </div>
+                <div className="text-[10px] text-amber-800/80 pt-0.5 font-medium">
+                  {pendingMentorshipCount > 0 ? 'Click to filter & approve' : 'All accounts verified'}
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-[#8A651E] uppercase tracking-wider">
+                  Executive Mentorship
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-[#8A651E] pt-1">
+                  {execG1MentorshipCount}
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Executive G1 & G2 tracks
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-emerald-800 uppercase tracking-wider">
+                  Professional Mentorship
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-emerald-800 pt-1">
+                  {profMentorshipCount}
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Prof Group 1 & 2 tracks
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-gray-500 uppercase tracking-wider">
+                  Total Self-Paced Index
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-[#1C1917] pt-1">
+                  {totalSelfPacedCount} Learners
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Student-Editable Study Trackers
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-[#8A651E] uppercase tracking-wider">
+                  CSEET Index (₹699)
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-[#8A651E] pt-1">
+                  {cseetSelfPacedCount}
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Level 1 syllabus tracker
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-amber-700 uppercase tracking-wider">
+                  Executive Index (₹899)
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-amber-700 pt-1">
+                  {execSelfPacedCount}
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Level 2 syllabus tracker
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#C8A45D]/30 p-4 rounded-2xl shadow-sm">
+                <div className="text-[11px] font-montserrat font-bold text-emerald-800 uppercase tracking-wider">
+                  Professional Index (₹999)
+                </div>
+                <div className="text-2xl font-cinzel font-bold text-emerald-800 pt-1">
+                  {profSelfPacedCount}
+                </div>
+                <div className="text-[10px] text-gray-500 pt-0.5">
+                  Level 3 syllabus tracker
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Search, Filter & Action Bar */}
           <div className="bg-white border border-[#C8A45D]/30 p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">

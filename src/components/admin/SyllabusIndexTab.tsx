@@ -168,7 +168,7 @@ export const SyllabusIndexTab: React.FC = () => {
                 {paper}
               </div>
               <div className="text-[10px] text-gray-500">
-                Includes Amendments, Scanner & CS Harkiran Kaur Strategy Notes
+                Includes Amendments, Scanner & Harkiran Kaur Strategy Notes
               </div>
             </div>
           ))}

@@ -44,6 +44,7 @@ import {
   getAdminViewingStudentId,
   setAdminViewingStudentId,
   loadAllStoredProfiles,
+  generateDefaultChapters,
 } from '../services/mentorshipTrackerService';
 import {
   getStudentByEmail,
@@ -51,6 +52,8 @@ import {
   updateStudentStudyIndexRows,
   CentralStudent,
 } from '../services/centralStudentDatabase';
+import { getStudyTrackDetails } from '../services/studyTrackService';
+import { StudyProgressIndexCheckoutModal } from '../components/StudyProgressIndexCheckoutModal';
 
 interface StudentPortalPageProps {
   onNavigate: (page: PageId) => void;
@@ -77,6 +80,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
   const [copiedResetLink, setCopiedResetLink] = useState(false);
+  const [isStudyIndexCheckoutOpen, setIsStudyIndexCheckoutOpen] = useState(false);
 
   // Admin impersonation handling — STRICT SECURITY: Only master admin can impersonate
   const isAdminUser = user?.role === 'admin';
@@ -278,51 +282,148 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
     }
   });
 
-  // Enrolled products
+  // Approved orders (strictly completed/approved)
+  const approvedOrders = studentOrders.filter(
+    (o) => o.status === 'COMPLETED'
+  );
+
+  // Check if student has an unapproved payment with UTR submitted
+  // Filter out any order that has already been approved via centralStudent database
+  const isStudentGloballyApproved = Boolean(
+    centralStudent?.paymentStatus === 'approved' ||
+    centralStudent?.mentorshipAccess ||
+    centralStudent?.studyIndexAccess
+  );
+
+  const pendingOrders = studentOrders.filter((o) => {
+    if (o.status !== 'PENDING' && o.status !== 'PENDING_APPROVAL') return false;
+    if (!o.utrNumber) return false;
+    // If student is approved in Central Database with matching UTR or course, this order is approved
+    if (
+      isStudentGloballyApproved &&
+      (o.utrNumber === centralStudent?.purchasedCourse?.transactionRef ||
+        o.utrNumber === centralStudent?.purchasedCourse?.utrNumber)
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const hasPendingPayment = Boolean(
+    !isStudentGloballyApproved &&
+    (centralStudent?.paymentStatus === 'pending' ||
+      centralStudent?.paymentStatus === 'pending_approval' ||
+      centralStudent?.purchasedCourse?.paymentStatus === 'pending' ||
+      centralStudent?.purchasedCourse?.paymentStatus === 'pending_approval' ||
+      pendingOrders.length > 0)
+  );
+
+  const pendingOrder = pendingOrders[0];
+  const pendingUtr =
+    centralStudent?.purchasedCourse?.transactionRef ||
+    centralStudent?.purchasedCourse?.utrNumber ||
+    pendingOrder?.utrNumber;
+  const pendingAmount =
+    centralStudent?.purchasedCourse?.finalAmount ||
+    centralStudent?.purchasedCourse?.amount ||
+    pendingOrder?.totalAmount;
+  const pendingProgramName =
+    centralStudent?.purchasedCourse?.courseName ||
+    pendingOrder?.items?.[0]?.name ||
+    'CS Mentorship Program';
+
+  const studentProgram = centralStudent?.program || (effectiveUser?.targetExam?.includes('Executive') ? 'CS Executive' : effectiveUser?.targetExam?.includes('Professional') ? 'CS Professional' : 'CS EET');
+  const studentGroup = centralStudent?.group || (effectiveUser?.targetExam?.includes('Group 2') ? 'Group 2' : effectiveUser?.targetExam?.includes('Both') ? 'Both Groups' : effectiveUser?.targetExam?.includes('EET') ? 'EET' : 'Group 1');
+  const studentLevel = centralStudent?.level || studentProgram;
+  const studentName = centralStudent?.fullName || effectiveUser?.fullName || 'Student';
+
+  const studyTrackDetails = useMemo(() => {
+    return getStudyTrackDetails(studentProgram, studentGroup, studentLevel);
+  }, [studentProgram, studentGroup, studentLevel]);
+
+  // Enrolled products — strictly approved only!
   const enrolledProductIds = new Set<string>([
-    ...(user?.purchasedProductIds || []),
-    ...(centralStudent?.mentorshipAccess ? ['exec-g1-mentorship'] : []),
-    ...(centralStudent?.studyIndexAccess ? ['cs-study-progress-index'] : []),
-    ...studentOrders.flatMap((o) => o.items.map((i) => i.productId)),
+    ...(centralStudent?.mentorshipAccess ? ['exec-g1-mentorship', 'mentorship-enrolled'] : []),
+    ...(centralStudent?.studyIndexAccess ? ['cs-study-progress-index', studyTrackDetails.productId] : []),
+    ...(centralStudent?.paymentStatus === 'approved' && centralStudent?.purchasedCourse?.courseId
+      ? [centralStudent.purchasedCourse.courseId]
+      : []),
+    ...approvedOrders.flatMap((o) => o.items.map((i) => i.productId)),
   ]);
 
   const enrolledProducts = PRODUCTS.filter((p) => enrolledProductIds.has(p.id));
 
-  const hasPurchasedStudyIndex = Boolean(
-    centralStudent?.studyIndexAccess ||
-    enrolledProductIds.has('cs-study-progress-index') ||
-    isImpersonating
+  // Determine approved mentorship access
+  const hasApprovedMentorshipAccess = Boolean(
+    isImpersonating ||
+    centralStudent?.mentorshipAccess ||
+    (centralStudent?.paymentStatus === 'approved' &&
+      !centralStudent?.purchasedCourse?.courseId?.includes('studytrack') &&
+      centralStudent?.purchasedCourse?.courseId !== 'cs-study-progress-index') ||
+    approvedOrders.some((o) =>
+      o.items.some((i) => !i.productId?.includes('studytrack') && i.productId !== 'cs-study-progress-index')
+    )
   );
 
-  const studyIndexProduct = PRODUCTS.find((p) => p.id === 'cs-study-progress-index');
+  // Access status determination:
+  // 1. Approved / Active
+  const isStudyIndexActive = Boolean(
+    isImpersonating ||
+    centralStudent?.studyIndexAccess ||
+    enrolledProductIds.has(studyTrackDetails.productId) ||
+    enrolledProductIds.has('cs-study-progress-index') ||
+    approvedOrders.some((o) =>
+      o.items.some((i) => i.productId === studyTrackDetails.productId || i.productId === 'cs-study-progress-index')
+    )
+  );
 
-  const handleBuyStudyIndex = () => {
-    if (studyIndexProduct) {
-      buyNow(studyIndexProduct);
-    } else {
-      onOpenJoinModal?.();
-    }
-  };
+  // 2. Verification Pending
+  const isStudyIndexPending = Boolean(
+    !isStudyIndexActive &&
+    (
+      centralStudent?.paymentStatus === 'pending_approval' ||
+      centralStudent?.purchasedCourse?.paymentStatus === 'pending_approval' ||
+      orders.some((o) =>
+        o.status === 'pending_approval' &&
+        o.items.some((i) =>
+          i.productId === studyTrackDetails.productId ||
+          i.productId?.includes('studytrack') ||
+          i.productId === 'cs-study-progress-index'
+        )
+      ) ||
+      (
+        (centralStudent?.purchasedCourse?.courseId?.includes('studytrack') ||
+          centralStudent?.purchasedCourse?.courseId?.includes('study-progress-index') ||
+          centralStudent?.purchasedCourse?.courseName?.toLowerCase().includes('progress index')) &&
+        centralStudent?.paymentStatus === 'pending_approval'
+      )
+    )
+  );
 
   const studyIndexProfile: StudentMentorshipProfile | null = useMemo(() => {
     if (!effectiveUser) return null;
     const baseProfile = mentorshipProfile || getOrCreateStudentMentorship({
       id: effectiveUser.id,
-      fullName: effectiveUser.fullName,
+      fullName: studentName,
       email: effectiveUser.email,
       phone: effectiveUser.phone,
       targetExam: effectiveUser.targetExam,
     });
 
+    const rows = (centralStudent?.studyIndexRows && centralStudent.studyIndexRows.length > 0)
+      ? centralStudent.studyIndexRows
+      : generateDefaultChapters(studentProgram, studentGroup);
+
     return {
       ...baseProfile,
+      fullName: studentName,
+      program: studentProgram as any,
+      group: studentGroup as any,
       isStudyProgressIndex: true,
-      studyIndexAccess: hasPurchasedStudyIndex,
-      trackerRows: (centralStudent?.studyIndexRows && centralStudent.studyIndexRows.length > 0)
-        ? centralStudent.studyIndexRows
-        : baseProfile.trackerRows,
+      studyIndexAccess: isStudyIndexActive,
+      trackerRows: rows,
     };
-  }, [effectiveUser, mentorshipProfile, centralStudent, hasPurchasedStudyIndex]);
+  }, [effectiveUser, mentorshipProfile, centralStudent, studentProgram, studentGroup, studentName, isStudyIndexActive]);
 
   // If not logged in and not in Admin Impersonation view, prompt sign in / registration
   if (!user && !isImpersonating) {
@@ -456,7 +557,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                 </p>
 
                 <p className="text-[11px] text-amber-200/80 pt-1">
-                  Mentor: <strong>CS Harkiran Kaur (AIR 3 CS Professional)</strong> • Official Workspace: <span className="underline">hk.code.of.rankers@gmail.com</span>
+                  Mentor: <strong>Harkiran Kaur (AIR 3 CS Professional)</strong> • Official Workspace: <span className="underline">hk.code.of.rankers@gmail.com</span>
                 </p>
               </div>
             </div>
@@ -486,8 +587,8 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
         )}
 
         {/* PENDING PAYMENT APPROVAL ALERT BANNER */}
-        {centralStudent?.purchasedCourse?.paymentStatus === 'pending' && (
-          <div className="bg-amber-50 border-2 border-amber-500/40 rounded-2xl p-4 text-amber-900 shadow-sm flex items-start gap-3.5">
+        {hasPendingPayment && (
+          <div className="bg-amber-50 border-2 border-amber-500/40 rounded-2xl p-4 text-amber-900 shadow-sm flex items-start gap-3.5 animate-fade-in">
             <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
             <div className="text-xs space-y-1">
               <div className="flex items-center gap-2 font-bold text-amber-900">
@@ -497,9 +598,22 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                 </span>
               </div>
               <p className="text-amber-800 leading-relaxed">
-                Your payment of <strong>₹{centralStudent.purchasedCourse.amount.toLocaleString('en-IN')}/-</strong> for{' '}
-                <strong>{centralStudent.purchasedCourse.courseName}</strong> (UTR:{' '}
-                <span className="font-mono font-bold">{centralStudent.purchasedCourse.utrNumber}</span>) has been submitted to the Central Database and is currently being verified by CS Harkiran Kaur Kohli. Full course unlocks immediately upon confirmation.
+                {pendingAmount ? (
+                  <>
+                    Your payment of <strong>₹{pendingAmount.toLocaleString('en-IN')}/-</strong> for{' '}
+                    <strong>{pendingProgramName}</strong>{' '}
+                  </>
+                ) : (
+                  <>
+                    Your enrollment request for <strong>{pendingProgramName}</strong>{' '}
+                  </>
+                )}
+                {pendingUtr && (
+                  <>
+                    (UTR: <span className="font-mono font-bold">{pendingUtr}</span>){' '}
+                  </>
+                )}
+                has been submitted to the Central Database and is currently being verified by Harkiran Kaur Kohli. Full course and personalized tracker access unlock immediately upon admin confirmation and approval email.
               </p>
             </div>
           </div>
@@ -525,7 +639,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
             )}
           </button>
 
-          {/* TAB 2: CS STUDY PROGRESS INDEX (₹999) */}
+          {/* TAB 2: HK STUDYTRACK PRO – CS PROGRESS INDEX */}
           <button
             onClick={() => setActiveTab('study-index')}
             className={`px-4 py-2.5 text-xs uppercase tracking-wider font-montserrat font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
@@ -538,12 +652,18 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
             <span>Study Progress Index</span>
             <span
               className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${
-                hasPurchasedStudyIndex
+                isStudyIndexActive
                   ? 'bg-emerald-700 text-white'
-                  : 'bg-amber-600 text-white'
+                  : isStudyIndexPending
+                  ? 'bg-amber-600 text-white animate-pulse'
+                  : 'bg-[#1C1917] text-[#FFE3A0]'
               }`}
             >
-              {hasPurchasedStudyIndex ? 'Full Access' : '₹999'}
+              {isStudyIndexActive
+                ? 'Edit Active'
+                : isStudyIndexPending
+                ? 'Verification Pending'
+                : `₹${studyTrackDetails.price.toLocaleString('en-IN')}`}
             </span>
           </button>
 
@@ -600,30 +720,273 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
         </div>
 
         {/* TAB 1: CS MENTORSHIP PROGRAM (STRICT VIEW ONLY FOR STUDENTS, FULL EDIT FOR ADMIN) */}
-        {activeTab === 'mentorship' && mentorshipProfile && (
-          <MentorshipTrackerView
-            profile={mentorshipProfile}
-            isAdmin={isImpersonating}
-            isStudyProgressIndex={false}
-            onProfileUpdated={(updated) => setMentorshipProfile(updated)}
-            onExitAdminView={handleExitAdminImpersonation}
-          />
+        {activeTab === 'mentorship' && (
+          hasApprovedMentorshipAccess ? (
+            mentorshipProfile && (
+              <MentorshipTrackerView
+                profile={mentorshipProfile}
+                isAdmin={isImpersonating}
+                isStudyProgressIndex={false}
+                onProfileUpdated={(updated) => setMentorshipProfile(updated)}
+                onExitAdminView={handleExitAdminImpersonation}
+              />
+            )
+          ) : hasPendingPayment ? (
+            /* Dedicated Awaiting Approval Card */
+            <div className="bg-white border-2 border-amber-500/50 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-md max-w-2xl mx-auto my-4 animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-700 animate-pulse">
+                <Clock className="w-8 h-8" />
+              </div>
+              <div className="space-y-2">
+                <span className="inline-block px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-montserrat font-bold rounded-full uppercase tracking-wider">
+                  Payment Verification In Progress • Awaiting Admin Approval
+                </span>
+                <h3 className="font-cinzel text-2xl font-bold text-[#1C1917]">
+                  Mentorship Access Awaiting Approval
+                </h3>
+                <p className="text-xs text-gray-600 leading-relaxed max-w-lg mx-auto">
+                  We have received your payment details and UTR submission for{' '}
+                  <strong className="text-gray-900">{pendingProgramName}</strong>. Harkiran Kaur Kohli is verifying your transaction. Once verified and approved in the Admin Portal, you will receive an official approval confirmation email and your 1-on-1 Mentorship Tracker will unlock immediately.
+                </p>
+              </div>
+
+              {pendingUtr && (
+                <div className="inline-flex items-center gap-2 bg-[#FAF7F2] border border-[#C8A45D]/40 px-4 py-2.5 rounded-2xl text-xs">
+                  <span className="text-gray-500 font-montserrat font-bold">Submitted UTR:</span>
+                  <span className="font-mono font-black text-black">{pendingUtr}</span>
+                  {pendingAmount && (
+                    <span className="text-[#8A651E] font-bold border-l border-gray-300 pl-2">
+                      ₹{pendingAmount.toLocaleString('en-IN')}/-
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    const cleanPhone = '919284084523';
+                    const text = `Hello Harkiran Kaur, I have submitted my payment of ₹${pendingAmount || ''} with UTR: ${pendingUtr || ''} for ${pendingProgramName}. Could you please verify and approve my mentorship access? Thank you!`;
+                    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+                  }}
+                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-montserrat font-bold text-xs rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer uppercase tracking-wider"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Notify Mentor on WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('invoices')}
+                  className="px-5 py-3 bg-[#FAF7F2] hover:bg-[#F0EBE0] border border-[#C8A45D] text-[#8A651E] font-montserrat font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-2 uppercase tracking-wider"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>View Submitted Receipt</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Unenrolled State */
+            <div className="bg-white border border-[#C8A45D]/40 rounded-3xl p-8 sm:p-12 text-center space-y-5 shadow-sm max-w-2xl mx-auto my-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-[#C8A45D]/40 flex items-center justify-center mx-auto text-[#8A651E]">
+                <GraduationCap className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-cinzel text-xl font-bold text-[#1C1917]">
+                  1-on-1 Mentorship Enrollment Required
+                </h3>
+                <p className="text-xs text-gray-600 max-w-md mx-auto">
+                  You are registered on HK Code of Rankers. To unlock your personalized 1-on-1 Mentorship Tracker and diagnostic schedule with Harkiran Kaur (AIR 3), please enroll in a mentorship program.
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <button
+                  onClick={() => onNavigate('programs')}
+                  className="px-6 py-3 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] hover:from-[#FFEFA6] hover:to-[#C8A45D] text-black font-montserrat font-bold text-xs rounded-xl shadow-md uppercase tracking-wider cursor-pointer"
+                >
+                  Explore Mentorship Programs
+                </button>
+              </div>
+            </div>
+          )
         )}
 
-        {/* TAB 2: CS STUDY PROGRESS INDEX (STUDENT VIEW + EDIT IF PURCHASED, PREVIEW IF UNPURCHASED) */}
+        {/* TAB 2: HK STUDYTRACK PRO – CS PROGRESS INDEX (STUDENT VIEW + EDIT IF APPROVED) */}
         {activeTab === 'study-index' && studyIndexProfile && (
-          <MentorshipTrackerView
-            profile={studyIndexProfile}
-            isAdmin={isImpersonating}
-            isStudyProgressIndex={true}
-            onPurchaseStudyIndex={handleBuyStudyIndex}
-            onProfileUpdated={(updated) => {
-              if (effectiveUser?.id) {
-                updateStudentStudyIndexRows(effectiveUser.id, updated.trackerRows);
-              }
-            }}
-            onExitAdminView={handleExitAdminImpersonation}
-          />
+          <div className="space-y-6">
+            {/* MANDATORY METADATA & ACCESS STATUS CARD */}
+            <div className="bg-white border-2 border-[#C8A45D]/40 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                <div>
+                  <div className="flex items-center gap-2 text-[#8A651E] text-xs font-montserrat uppercase tracking-wider font-bold mb-1">
+                    <Layers className="w-4 h-4 text-[#C8A45D]" />
+                    <span>Study Progress Index</span>
+                  </div>
+                  <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-gray-900">
+                    HK StudyTrack Pro – CS Progress Index
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Self-study tracking product allowing you to track and edit your own preparation after purchasing the applicable index.
+                  </p>
+                </div>
+
+                {/* Direct Access Status Display */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {isStudyIndexActive ? (
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 border-2 border-emerald-500 rounded-full text-emerald-800 text-xs font-montserrat font-bold shadow-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Edit Access Active</span>
+                    </div>
+                  ) : isStudyIndexPending ? (
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 border-2 border-amber-400 rounded-full text-amber-900 text-xs font-montserrat font-bold shadow-xs animate-pulse">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <span>Payment Verification Pending</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gray-100 border-2 border-gray-300 rounded-full text-gray-800 text-xs font-montserrat font-bold shadow-xs">
+                      <Lock className="w-4 h-4 text-gray-500" />
+                      <span>View Only</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* SPECIFICATION MANDATE:
+                  Show:
+                  - Student name
+                  - Program
+                  - Level
+                  - Group
+                  - Applicable Index
+                  - Access status
+              */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Student Name</span>
+                  <span className="text-xs font-bold text-gray-900 truncate block mt-0.5" title={studentName}>
+                    {studentName}
+                  </span>
+                </div>
+
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Program</span>
+                  <span className="text-xs font-bold text-gray-900 truncate block mt-0.5">
+                    {studentProgram}
+                  </span>
+                </div>
+
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Level</span>
+                  <span className="text-xs font-bold text-gray-900 truncate block mt-0.5">
+                    {studentLevel}
+                  </span>
+                </div>
+
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Group</span>
+                  <span className="text-xs font-bold text-gray-900 truncate block mt-0.5">
+                    {studentGroup}
+                  </span>
+                </div>
+
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Applicable Index</span>
+                  <span className="text-xs font-bold text-[#8A651E] truncate block mt-0.5" title={studyTrackDetails.applicableIndex}>
+                    {studyTrackDetails.applicableIndex}
+                  </span>
+                </div>
+
+                <div className="bg-[#FAF9F5] p-3 rounded-2xl border border-[#C8A45D]/20">
+                  <span className="text-[10px] uppercase font-montserrat font-semibold text-gray-500 block">Access Status</span>
+                  <span className="text-xs font-bold text-gray-900 block mt-0.5">
+                    {isStudyIndexActive
+                      ? 'Edit Access Active'
+                      : isStudyIndexPending
+                      ? 'Payment Verification Pending'
+                      : 'View Only'}
+                  </span>
+                </div>
+              </div>
+
+              {/* ACTION / NOTIFICATION BANNERS */}
+              {!isStudyIndexActive && !isStudyIndexPending && (
+                <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-[#C8A45D]/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-amber-500 text-black text-[10px] font-bold rounded-md uppercase">
+                        View Only Mode
+                      </span>
+                      <span className="font-montserrat font-bold text-xs text-gray-900">
+                        Unlock {studyTrackDetails.applicableIndex} Edit Access
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      You are currently in <strong>View Only</strong> mode. Purchase your assigned index to edit lecture completion, record test scores, and track your revision cycles.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setIsStudyIndexCheckoutOpen(true)}
+                    className="px-5 py-2.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] hover:from-[#FFEFA6] hover:to-[#C8A45D] text-black font-montserrat font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md shrink-0 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>Unlock Edit Access (₹{studyTrackDetails.price.toLocaleString('en-IN')}/-)</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {isStudyIndexPending && (
+                <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <h4 className="font-montserrat font-bold text-xs text-amber-950">
+                        Payment Verification Pending (₹{studyTrackDetails.price.toLocaleString('en-IN')}/-)
+                      </h4>
+                      <p className="text-xs text-amber-800 leading-relaxed">
+                        Your UPI payment is awaiting verification by Admin Harkiran Kaur. Your index is currently in <strong>View Only</strong> mode and will automatically switch to <strong>Edit Access Active</strong> upon approval.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={`https://wa.me/919284084523?text=${encodeURIComponent(
+                      `Hello Harkiran Ma'am, I have submitted UPI payment for HK StudyTrack Pro (${studyTrackDetails.applicableIndex}). Kindly verify my UTR.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-montserrat font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Notify on WhatsApp</span>
+                  </a>
+                </div>
+              )}
+
+              {isStudyIndexActive && (
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs text-emerald-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>
+                      <strong>Edit Access Active:</strong> You have full permission to edit and save your study progress, revision cycles, and test marks below. Your changes persist across logins and logouts.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SYLLABUS INDEX COMPONENT (Strictly Isolated to Student's Applicable Index) */}
+            <MentorshipTrackerView
+              profile={studyIndexProfile}
+              isAdmin={isImpersonating}
+              isStudyProgressIndex={true}
+              onPurchaseStudyIndex={() => setIsStudyIndexCheckoutOpen(true)}
+              onProfileUpdated={(updated) => {
+                const studentKey = centralStudent?.studentId || effectiveUser?.email || effectiveUser?.id;
+                if (studentKey) {
+                  updateStudentStudyIndexRows(studentKey, updated.trackerRows);
+                }
+              }}
+              onExitAdminView={handleExitAdminImpersonation}
+            />
+          </div>
         )}
 
         {/* TAB 1: MY COURSES */}
@@ -639,7 +1002,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                     No Paid Mentorship Programs Enrolled Yet
                   </h3>
                   <p className="text-xs text-gray-600 max-w-md mx-auto">
-                    You have registered your free student portal! You can book your 1st 1-on-1 diagnostic call with CS Harkiran Kaur or join our exclusive 25-aspirant mentorship batches below.
+                    You have registered your free student portal! You can book your 1st 1-on-1 diagnostic call with Harkiran Kaur or join our exclusive 25-aspirant mentorship batches below.
                   </p>
                 </div>
 
@@ -734,7 +1097,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                   Personal Mentorship Protocol
                 </span>
                 <h4 className="font-cinzel text-base sm:text-lg font-bold text-[#1C1917]">
-                  Need 1-on-1 Subject Guidance with CS Harkiran Kaur?
+                  Need 1-on-1 Subject Guidance with Harkiran Kaur?
                 </h4>
                 <p className="text-xs text-gray-600">
                   Every enrolled aspirant gets direct diagnostic evaluation, target schedules, and test answer checking within 48-72 hours.
@@ -852,7 +1215,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                 Upcoming Launches for 2026 CS Aspirants
               </h3>
               <p className="text-xs text-gray-300 max-w-2xl leading-relaxed">
-                As a registered student on HK Code of Rankers, you receive priority reservation and early bird discounts on all upcoming tools, test series, and study materials crafted by CS Harkiran Kaur (AIR 3).
+                As a registered student on HK Code of Rankers, you receive priority reservation and early bird discounts on all upcoming tools, test series, and study materials crafted by Harkiran Kaur (AIR 3).
               </p>
             </div>
 
@@ -964,7 +1327,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
                   </h4>
 
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Weekly live interactive masterclasses on high-weightage drafting techniques, examiner psychology, 100-mark paper pacing, and anxiety elimination with CS Harkiran Kaur (AIR 3).
+                    Weekly live interactive masterclasses on high-weightage drafting techniques, examiner psychology, 100-mark paper pacing, and anxiety elimination with Harkiran Kaur (AIR 3).
                   </p>
 
                   <ul className="text-xs text-gray-700 space-y-1.5 pt-1">
@@ -1034,7 +1397,7 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
 
               <div className="p-4 bg-[#FAF7F2] rounded-2xl space-y-1">
                 <span className="text-gray-500 font-montserrat uppercase text-[10px]">Official Head Mentor</span>
-                <p className="font-bold text-black text-sm">CS Harkiran Kaur Kohli (AIR 3 CS Professional)</p>
+                <p className="font-bold text-black text-sm">Harkiran Kaur Kohli (AIR 3 CS Professional)</p>
               </div>
 
               <div className="p-4 bg-[#FAF7F2] rounded-2xl space-y-1">
@@ -1124,6 +1487,31 @@ export const StudentPortalPage: React.FC<StudentPortalPageProps> = ({
               )}
             </div>
           </div>
+        )}
+
+        {/* Study Progress Index Dedicated UPI Checkout Modal */}
+        {studyTrackDetails && (
+          <StudyProgressIndexCheckoutModal
+            isOpen={isStudyIndexCheckoutOpen}
+            onClose={() => setIsStudyIndexCheckoutOpen(false)}
+            details={studyTrackDetails}
+            student={
+              centralStudent ||
+              ({
+                studentId: effectiveUser?.id || `std_${Date.now()}`,
+                fullName: studentName,
+                email: effectiveUser?.email || '',
+                phone: effectiveUser?.phone || '',
+                program: studentProgram,
+                level: studentLevel,
+                group: studentGroup,
+                targetExam: `${studentProgram} — ${studentGroup}`,
+              } as any)
+            }
+            onSuccess={() => {
+              // The central database and OrderContext are updated
+            }}
+          />
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, Clock, Sparkles, AlertCircle, Award, Send, HelpCircle, BookOpen, Target, Brain, FileCheck, ShoppingBag, Zap, Check, Loader2, Database } from 'lucide-react';
+import { X, CheckCircle2, Clock, Sparkles, AlertCircle, Award, Send, HelpCircle, BookOpen, Target, Brain, FileCheck, ShoppingBag, Zap, Check, Loader2, Database, MessageSquare } from 'lucide-react';
 import founderImg from '../assets/images/regenerated_image_1785612225656.jpg';
 import { Product } from '../types';
 import { saveEnrollment, saveCounsellingBooking } from '../lib/supabase';
@@ -543,13 +543,16 @@ interface CounsellingModalProps {
 export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     examLevel: 'Class 12th Pass (CS Career Roadmap)',
     date: 'Tomorrow at 4:00 PM',
+    notes: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [supabaseSaved, setSupabaseSaved] = useState(false);
+  const [bookingId, setBookingId] = useState('');
 
   // Close with Escape key
   useEffect(() => {
@@ -565,16 +568,40 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+      alert('Please provide your name, email address, and WhatsApp number.');
+      return;
+    }
+
     setIsSubmitting(true);
     const result = await saveCounsellingBooking({
-      name: formData.name,
-      phone: formData.phone,
+      name: formData.name.trim(),
+      email: formData.email.trim().toLowerCase(),
+      phone: formData.phone.trim(),
       examLevel: formData.examLevel,
       date: formData.date,
+      notes: formData.notes.trim(),
     });
+
+    const generatedId = `FREE-${Date.now().toString().slice(-4)}`;
+    setBookingId(generatedId);
     setIsSubmitting(false);
     setSupabaseSaved(result.savedToSupabase);
     setSubmitted(true);
+  };
+
+  const getWhatsAppStudentUrl = () => {
+    const text = encodeURIComponent(
+      `Hello Harkiran Ma'am! I have just booked a Free 1-on-1 Guidance Call on your website.\n\n` +
+      `👤 Name: ${formData.name}\n` +
+      `📧 Email: ${formData.email}\n` +
+      `📱 WhatsApp: ${formData.phone}\n` +
+      `📚 Exam Target: ${formData.examLevel}\n` +
+      `⏰ Preferred Slot: ${formData.date}\n` +
+      (formData.notes ? `📝 Query: ${formData.notes}\n` : '') +
+      `\nKindly confirm my call slot. Thank you!`
+    );
+    return `https://wa.me/919999999999?text=${text}`; // admin desk
   };
 
   return (
@@ -595,7 +622,7 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
         <span className="hidden sm:inline">Close</span>
       </button>
 
-      <div className="bg-white border-2 border-[#C8A45D]/60 rounded-3xl w-full max-w-md p-6 sm:p-7 relative shadow-2xl overflow-hidden max-h-[92vh] flex flex-col font-poppins">
+      <div className="bg-white border-2 border-[#C8A45D]/60 rounded-3xl w-full max-w-lg p-6 sm:p-7 relative shadow-2xl overflow-hidden max-h-[92vh] flex flex-col font-poppins">
         {/* Top Header with Close Pill */}
         <div className="flex items-start justify-between border-b border-gray-100 pb-3 shrink-0">
           <div>
@@ -603,7 +630,7 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
               <Award className="w-4 h-4" /> 1-on-1 Free Strategy Call
             </div>
             <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-[#0F0F0F]">
-              Book Free Counselling
+              Book Free Counselling Session
             </h3>
           </div>
           <button
@@ -627,7 +654,7 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
               className="space-y-3.5 text-xs"
             >
               <div>
-                <label className="block text-gray-700 font-medium mb-1">Your Name *</label>
+                <label className="block text-gray-700 font-semibold mb-1">Your Full Name *</label>
                 <input
                   type="text"
                   required
@@ -638,49 +665,79 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. rahul@gmail.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
+                  />
+                  <span className="text-[10px] text-gray-500 mt-0.5 block">Call slot confirmation will be sent here</span>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">WhatsApp ID / Mobile *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
+                  />
+                  <span className="text-[10px] text-emerald-600 font-medium mt-0.5 block">For 1-on-1 call & WhatsApp update</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">Exam Level / Stage *</label>
+                  <select
+                    value={formData.examLevel}
+                    onChange={(e) => setFormData({ ...formData, examLevel: e.target.value })}
+                    className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
+                  >
+                    <option value="Class 12th Pass (CS Career Roadmap)">Class 12th Pass (CS Career Roadmap & Counselling)</option>
+                    <option value="CSEET">CSEET Aspirant</option>
+                    <option value="CS Executive Group 1">CS Executive Group 1</option>
+                    <option value="CS Executive Group 2">CS Executive Group 2</option>
+                    <option value="CS Executive Both Groups">CS Executive Both Groups</option>
+                    <option value="CS Professional Group 1">CS Professional Group 1</option>
+                    <option value="CS Professional Group 2">CS Professional Group 2</option>
+                    <option value="CS Professional Both Groups">CS Professional Both Groups</option>
+                    <option value="Parent Inquiry">Parent / Guardian</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-1">Preferred Time Slot *</label>
+                  <select
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
+                  >
+                    <option value="Today Evening (6:00 PM - 8:00 PM)">Today Evening (6:00 PM - 8:00 PM)</option>
+                    <option value="Tomorrow Morning (10:00 AM - 12:00 PM)">Tomorrow Morning (10:00 AM - 12:00 PM)</option>
+                    <option value="Tomorrow Evening (4:00 PM - 6:00 PM)">Tomorrow Evening (4:00 PM - 6:00 PM)</option>
+                    <option value="Tomorrow Night (8:00 PM - 9:30 PM)">Tomorrow Night (8:00 PM - 9:30 PM)</option>
+                    <option value="Weekend Special Slot">Weekend Special Slot</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-gray-700 font-medium mb-1">WhatsApp Number *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+91 98765 43210"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
+                <label className="block text-gray-700 font-semibold mb-1">Your Key Question or Goal (Optional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Preparing for Dec 2026 attempt, need daily study timetable and Company Law strategy"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2 rounded-xl focus:outline-none resize-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Exam Level / Stage *</label>
-                <select
-                  value={formData.examLevel}
-                  onChange={(e) => setFormData({ ...formData, examLevel: e.target.value })}
-                  className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
-                >
-                  <option value="Class 12th Pass (CS Career Roadmap)">Class 12th Pass (CS Career Roadmap & Counselling)</option>
-                  <option value="CSEET">CSEET Aspirant</option>
-                  <option value="CS Executive Group 1">CS Executive Group 1</option>
-                  <option value="CS Executive Group 2">CS Executive Group 2</option>
-                  <option value="CS Executive Both Groups">CS Executive Both Groups</option>
-                  <option value="CS Professional Group 1">CS Professional Group 1</option>
-                  <option value="CS Professional Group 2">CS Professional Group 2</option>
-                  <option value="CS Professional Both Groups">CS Professional Both Groups</option>
-                  <option value="Parent Inquiry">Parent / Guardian</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Preferred Time Slot *</label>
-                <select
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full bg-[#F8F6F2] border border-gray-300 focus:border-[#C8A45D] text-[#0F0F0F] px-3.5 py-2.5 rounded-xl focus:outline-none"
-                >
-                  <option value="Today Evening (6:00 PM - 8:00 PM)">Today Evening (6:00 PM - 8:00 PM)</option>
-                  <option value="Tomorrow Morning (10:00 AM - 12:00 PM)">Tomorrow Morning (10:00 AM - 12:00 PM)</option>
-                  <option value="Tomorrow Evening (4:00 PM - 6:00 PM)">Tomorrow Evening (4:00 PM - 6:00 PM)</option>
-                  <option value="Weekend Special Slot">Weekend Special Slot</option>
-                </select>
               </div>
 
               <div className="flex items-center gap-2.5 pt-2">
@@ -699,10 +756,10 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-black" />
-                      <span>Booking...</span>
+                      <span>Booking Slot...</span>
                     </>
                   ) : (
-                    <span>Confirm Free Call Slot</span>
+                    <span>Confirm Free Session Slot</span>
                   )}
                 </button>
               </div>
@@ -710,32 +767,59 @@ export const BookCounsellingModal: React.FC<CounsellingModalProps> = ({ isOpen, 
           </div>
         ) : (
           <div className="text-center py-6 space-y-4 my-auto">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/40 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-7 h-7" />
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h3 className="font-cinzel text-xl font-bold text-[#0F0F0F]">Slot Booked!</h3>
-            
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FAF5E9] border border-[#C8A45D]/40 rounded-full text-[11px] text-[#8A651E] font-medium mx-auto">
-              <Database className="w-3.5 h-3.5 text-[#C8A45D]" />
-              <span>
-                {supabaseSaved
-                  ? 'Saved in Supabase Backend (Project: qafnqmguzzrhksoitrzf)'
-                  : 'Slot Confirmed & Synced to Backend'}
-              </span>
-            </div>
+            <h3 className="font-cinzel text-2xl font-bold text-[#0F0F0F]">Free Session Confirmed!</h3>
 
-            <p className="text-xs text-gray-600 leading-relaxed font-poppins">
-              Harkiran Kaur will call you at <span className="text-[#8A651E] font-bold">{formData.date}</span> on <span className="text-black font-semibold">{formData.phone}</span>. Keep your questions ready!
+            <div className="bg-[#FAF8F5] border border-[#C8A45D]/40 rounded-2xl p-4 text-left max-w-md mx-auto space-y-2 text-xs">
+              <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                <span className="text-gray-500">Student Name:</span>
+                <span className="font-bold text-black">{formData.name}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                <span className="text-gray-500">Email Address:</span>
+                <span className="font-bold text-[#8A651E]">{formData.email}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                <span className="text-gray-500">WhatsApp ID:</span>
+                <span className="font-bold text-emerald-800">{formData.phone}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                <span className="text-gray-500">Preferred Slot:</span>
+                <span className="font-bold text-black">{formData.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Exam Target:</span>
+                <span className="font-bold text-black">{formData.examLevel}</span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-600 leading-relaxed font-poppins max-w-sm mx-auto">
+              Harkiran Kaur will connect with you at your chosen slot. You can also directly chat with Harkiran on WhatsApp now:
             </p>
-            <button
-              onClick={() => {
-                setSubmitted(false);
-                onClose();
-              }}
-              className="px-6 py-2.5 bg-black text-[#FFE3A0] hover:bg-gray-800 rounded-xl text-xs font-montserrat font-bold transition-all cursor-pointer shadow-md"
-            >
-              Close Window
-            </button>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+              <a
+                href={getWhatsAppStudentUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-montserrat font-bold transition-all flex items-center justify-center gap-2 shadow-md"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Message Harkiran on WhatsApp</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  onClose();
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-black text-[#FFE3A0] hover:bg-gray-800 rounded-xl text-xs font-montserrat font-bold transition-all cursor-pointer shadow-md"
+              >
+                Done
+              </button>
+            </div>
           </div>
         )}
       </div>

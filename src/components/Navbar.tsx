@@ -27,6 +27,7 @@ interface NavbarProps {
   onNavigate: (page: PageId) => void;
   onOpenJoinModal: () => void;
   onOpenCounsellingModal: () => void;
+  onOpenSystemGuide?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -34,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   onOpenJoinModal,
   onOpenCounsellingModal,
+  onOpenSystemGuide,
 }) => {
   const { totalItemsCount, setIsCartOpen } = useCart();
   const { user, openAuthModal } = useAuth();
@@ -73,13 +75,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="flex items-center gap-4 text-[10px] font-bold tracking-wider uppercase">
-            <button
-              onClick={() => handleNavClick('faq')}
-              className="text-[#FFE3A0] hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <HelpCircle className="w-3 h-3 text-[#C8A45D]" />
-              <span>Student Support & FAQs</span>
-            </button>
+            {onOpenSystemGuide && (
+              <button
+                onClick={onOpenSystemGuide}
+                className="text-[#FFE3A0] hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer bg-white/10 px-2.5 py-1 rounded-md border border-[#C8A45D]/40"
+              >
+                <Sparkles className="w-3 h-3 text-[#FFE3A0]" />
+                <span>Student Guide &amp; Infographic</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -159,13 +163,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               onMouseLeave={() => setDropdownOpen(null)}
             >
               <button
+                onClick={() => handleNavClick('programs')}
                 className={`flex items-center gap-1 px-3 py-1.5 text-xs uppercase tracking-widest font-semibold transition-all cursor-pointer rounded-full ${
                   ['programs', 'cseet', 'cs-executive', 'cs-professional', 'test-series'].includes(currentPage)
                     ? 'text-black font-extrabold bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] shadow-sm'
                     : 'text-[#1C1917] hover:text-[#8A651E] hover:bg-[#C8A45D]/10'
                 }`}
               >
-                Programs <ChevronDown className="w-3.5 h-3.5 text-[#C8A45D]" />
+                Programs &amp; Pricing <ChevronDown className="w-3.5 h-3.5 text-[#C8A45D]" />
               </button>
 
               {dropdownOpen === 'programs' && (
@@ -173,9 +178,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="py-2 bg-white border border-[#C8A45D]/50 rounded-lg shadow-2xl backdrop-blur-xl">
                     <button
                       onClick={() => handleNavClick('programs')}
-                      className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#8A651E] hover:bg-[#F8F6F2] flex items-center gap-2 cursor-pointer border-b border-[#C8A45D]/20"
+                      className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer border-b border-[#C8A45D]/20"
                     >
-                      <GraduationCap className="w-4 h-4" /> View All Programs
+                      <span className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4" /> All Programs &amp; Pricing
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[#C8A45D]/20 text-[#8A651E] rounded font-bold">Directory</span>
+                    </button>
+                    <button
+                      onClick={() => handleNavClick('programs')}
+                      className="w-full text-left px-4 py-2.5 text-xs text-[#2D2D2D] hover:text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer font-medium border-l-2 border-transparent hover:border-[#C8A45D] transition-colors"
+                    >
+                      <span className="flex items-center gap-2 font-bold text-amber-900">
+                        <BookOpen className="w-4 h-4 text-[#C8A45D]" /> HK StudyTrack Pro Index
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 bg-amber-500/15 text-amber-800 rounded font-bold">₹699+</span>
                     </button>
                     <button
                       onClick={() => handleNavClick('cseet')}
@@ -188,7 +205,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={() => handleNavClick('cs-executive')}
                       className="w-full text-left px-4 py-2.5 text-xs text-[#2D2D2D] hover:text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer font-medium border-l-2 border-transparent hover:border-[#C8A45D] transition-colors"
                     >
-                      <span>CS Executive (Mod 1 & 2)</span>
+                      <span>CS Executive (Mod 1 &amp; 2)</span>
                       <span className="text-[10px] px-2 py-0.5 bg-[#C8A45D]/25 text-[#8A651E] rounded font-bold">Popular</span>
                     </button>
                     <button
@@ -202,8 +219,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={() => handleNavClick('test-series')}
                       className="w-full text-left px-4 py-2.5 text-xs text-[#2D2D2D] hover:text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer font-medium border-t border-[#C8A45D]/20 border-l-2 border-transparent hover:border-[#C8A45D] transition-colors"
                     >
-                      <span>Answersheet Analysis Report</span>
-                      <span className="text-[10px] px-2 py-0.5 bg-emerald-500/15 text-emerald-800 rounded font-bold">June 2026</span>
+                      <span>Test Series &amp; Copy Audit</span>
+                      <span className="text-[10px] px-2 py-0.5 bg-emerald-500/15 text-emerald-800 rounded font-bold">Active</span>
                     </button>
                   </div>
                 </div>
@@ -245,14 +262,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     </button>
                     <button
-                      onClick={() => handleNavClick('resources')}
+                      onClick={() => handleNavClick('test-series')}
                       className="w-full text-left px-4 py-2.5 text-xs text-[#2D2D2D] hover:text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer font-medium border-l-2 border-transparent hover:border-[#C8A45D] transition-colors"
                     >
                       <span className="flex items-center gap-2">
                         <Award className="w-4 h-4 text-[#C8A45D]" /> Test Series (All 3 Levels)
                       </span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-amber-500/15 text-amber-800 rounded font-bold">
-                        Launching Soon
+                      <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/15 text-emerald-800 rounded font-bold">
+                        Available
                       </span>
                     </button>
                     <button
@@ -454,21 +471,34 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <div className="border-t border-gray-200 pt-2 my-1">
               <span className="text-[10px] font-semibold text-[#8A651E] uppercase tracking-widest px-3">
-                Guidance & Support
+                Guidance &amp; Support
               </span>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <button
-                  onClick={() => handleNavClick('faq')}
-                  className="text-left px-3 py-2 bg-white text-[#1C1917] border border-[#C8A45D]/50 rounded-lg text-xs font-bold flex items-center gap-1.5"
-                >
-                  <HelpCircle className="w-3.5 h-3.5 text-[#8A651E]" /> FAQs & Help
-                </button>
-                <button
-                  onClick={() => handleNavClick('contact')}
-                  className="text-left px-3 py-2 bg-white text-[#8A651E] border border-[#C8A45D]/40 rounded-lg text-xs font-semibold flex items-center gap-1.5"
-                >
-                  <Phone className="w-3.5 h-3.5 text-[#C8A45D]" /> Direct Contact Desk
-                </button>
+              <div className="grid grid-cols-1 gap-2 mt-1">
+                {onOpenSystemGuide && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenSystemGuide();
+                    }}
+                    className="text-left px-3 py-2 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-black" /> Student Workflow &amp; Infographic Guide
+                  </button>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleNavClick('faq')}
+                    className="text-left px-3 py-2 bg-white text-[#1C1917] border border-[#C8A45D]/50 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5 text-[#8A651E]" /> FAQs &amp; Help
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('contact')}
+                    className="text-left px-3 py-2 bg-white text-[#8A651E] border border-[#C8A45D]/40 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-[#C8A45D]" /> Contact Desk
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -477,9 +507,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Free Notes</span>
                 <span className="text-[9px] px-1 bg-amber-500/15 text-amber-800 rounded font-bold">Soon</span>
               </button>
-              <button onClick={() => handleNavClick('resources')} className="text-left py-1.5 px-3 hover:text-[#8A651E] flex items-center justify-between">
+              <button onClick={() => handleNavClick('test-series')} className="text-left py-1.5 px-3 hover:text-[#8A651E] flex items-center justify-between">
                 <span>Test Series (3 Levels)</span>
-                <span className="text-[9px] px-1 bg-amber-500/15 text-amber-800 rounded font-bold">Soon</span>
+                <span className="text-[9px] px-1 bg-emerald-500/15 text-emerald-800 rounded font-bold">Available</span>
               </button>
               <button onClick={() => handleNavClick('blog')} className="text-left py-1.5 px-3 hover:text-[#8A651E] flex items-center justify-between">
                 <span>Articles & Blog</span>

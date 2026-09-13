@@ -15,9 +15,11 @@ import {
   TrackerRow,
   MonthMentorshipRecord,
   StudentMentorshipProfile,
+  MentorshipGroup,
 } from '../types/mentorship';
 import {
   buildTrackerRowsFromSyllabusGroup,
+  generateDefaultChapters,
   createDefault12MonthCalls,
   CURRENT_SYLLABUS_VERSION,
 } from './mentorshipTrackerService';
@@ -71,7 +73,9 @@ export interface PurchasedCourseInfo {
   finalAmount: number;
   orderId: string;
   paymentMethod: string;
+  paymentStatus?: PaymentStatus;
   transactionRef?: string; // 12-digit UPI UTR
+  utrNumber?: string;
   paymentDate: string;
   paymentProofNotes?: string;
   reviewedAt?: string;
@@ -123,9 +127,9 @@ export interface CentralStudent {
 
   // PRODUCT A: Mentorship Access (Admin Controlled, Student View-Only)
   mentorshipAccess: boolean;
-  assignedIndexId: 'cseet' | 'exec-g1' | 'exec-g2' | 'prof-g1' | 'prof-g2';
+  assignedIndexId: 'cseet' | 'exec-g1' | 'exec-g2' | 'exec-both' | 'prof-g1' | 'prof-g2' | 'prof-both';
 
-  // PRODUCT B: CS Study Progress Index — ₹999/- (Student = VIEW + EDIT ACCESS)
+  // PRODUCT B: HK StudyTrack Pro – CS Progress Index (Student = VIEW + EDIT ACCESS when approved)
   studyIndexAccess: boolean;
   studyIndexRows?: TrackerRow[];
 
@@ -141,8 +145,11 @@ export interface CentralStudent {
 
 export interface DiscountCodeRecord {
   code: string;
-  discountPercent: 15 | 5;
+  discountPercent: number;
   isUsed: boolean;
+  isActive?: boolean;
+  isPermanentMultiUse?: boolean;
+  usageCount?: number;
   usedByStudentId?: string;
   usedByStudentName?: string;
   usedByEmail?: string;
@@ -191,17 +198,25 @@ export const PREDEFINED_15_PERCENT_CODES = [
 export function getAssignedIndexId(
   program: ProgramName,
   group: ProgramGroup
-): 'cseet' | 'exec-g1' | 'exec-g2' | 'prof-g1' | 'prof-g2' {
+): 'cseet' | 'exec-g1' | 'exec-g2' | 'exec-both' | 'prof-g1' | 'prof-g2' | 'prof-both' {
   if (program === 'CS EET' || group === 'EET') return 'cseet';
   if (program === 'CS Executive') {
+    if (group === 'Both Groups' || (group as string) === 'Both') return 'exec-both';
     if (group === 'Group 2') return 'exec-g2';
-    return 'exec-g1'; // defaults to Group 1 (or primary for Both Groups)
+    return 'exec-g1'; // defaults to Group 1
   }
   if (program === 'CS Professional') {
+    if (group === 'Both Groups' || (group as string) === 'Both') return 'prof-both';
     if (group === 'Group 2') return 'prof-g2';
     return 'prof-g1';
   }
   return 'exec-g1';
+}
+
+export function toMentorshipGroup(group: ProgramGroup): MentorshipGroup {
+  if (group === 'Group 2') return 'Group 2';
+  if (group === 'Both Groups' || (group as string) === 'Both') return 'Both';
+  return 'Group 1';
 }
 
 /**
@@ -289,6 +304,20 @@ export function getDiscountCodes(): DiscountCodeRecord[] {
 }
 
 /**
+ * Saves discount codes to localStorage and broadcasts sync event
+ */
+export function saveDiscountCodes(codes: DiscountCodeRecord[]): boolean {
+  try {
+    localStorage.setItem(DISCOUNT_CODES_KEY, JSON.stringify(codes));
+    notifyDbChange();
+    return true;
+  } catch (err) {
+    console.error('Error saving discount codes:', err);
+    return false;
+  }
+}
+
+/**
  * Validates a discount code (15% or 5% off, single use per code, no stacking)
  */
 export function validateDiscountCode(
@@ -310,7 +339,18 @@ export function validateDiscountCode(
     };
   }
 
-  if (found.isUsed) {
+  if (found.isActive === false) {
+    return {
+      valid: false,
+      discountPercent: 0,
+      message: `Promo code ${formatted} is currently inactive.`,
+    };
+  }
+
+  // HK5 is designated multi-use promotional code
+  const isMultiUse = found.code === 'HK5' || found.isPermanentMultiUse;
+
+  if (found.isUsed && !isMultiUse) {
     return {
       valid: false,
       discountPercent: 0,
@@ -321,13 +361,13 @@ export function validateDiscountCode(
   return {
     valid: true,
     discountPercent: found.discountPercent,
-    message: `🎉 Success! ${found.discountPercent}% Ranker Discount applied (${formatted}).`,
+    message: `🎉 Success! ${found.discountPercent}% Discount applied (${formatted}).`,
     record: found,
   };
 }
 
 /**
- * Marks a discount code as permanently redeemed
+ * Marks a discount code as redeemed
  */
 export function markDiscountCodeUsed(
   code: string,
@@ -338,20 +378,87 @@ export function markDiscountCodeUsed(
   const idx = codes.findIndex((c) => c.code === formatted);
   if (idx === -1) return false;
 
-  codes[idx].isUsed = true;
+  const isMultiUse = formatted === 'HK5' || codes[idx].isPermanentMultiUse;
+  if (!isMultiUse) {
+    codes[idx].isUsed = true;
+  }
   codes[idx].usedByStudentId = details.studentId;
   codes[idx].usedByStudentName = details.studentName;
   codes[idx].usedByEmail = details.email;
   codes[idx].usedWithOrderId = details.orderId;
   codes[idx].usedAt = new Date().toISOString();
+  codes[idx].usageCount = (codes[idx].usageCount || 0) + 1;
 
-  try {
-    localStorage.setItem(DISCOUNT_CODES_KEY, JSON.stringify(codes));
-    notifyDbChange();
-    return true;
-  } catch {
-    return false;
+  return saveDiscountCodes(codes);
+}
+
+/**
+ * Admin: Adds a new custom discount code
+ */
+export function addCustomDiscountCode(
+  code: string,
+  discountPercent: number,
+  isPermanentMultiUse: boolean = false
+): { success: boolean; message: string } {
+  const formatted = (code || '').trim().toUpperCase();
+  if (!formatted) {
+    return { success: false, message: 'Please enter a code name.' };
   }
+  if (discountPercent <= 0 || discountPercent > 100) {
+    return { success: false, message: 'Discount percentage must be between 1% and 100%.' };
+  }
+
+  const codes = getDiscountCodes();
+  if (codes.some((c) => c.code === formatted)) {
+    return { success: false, message: `Code ${formatted} already exists.` };
+  }
+
+  codes.unshift({
+    code: formatted,
+    discountPercent,
+    isUsed: false,
+    isActive: true,
+    isPermanentMultiUse,
+    usageCount: 0,
+  });
+
+  saveDiscountCodes(codes);
+  return { success: true, message: `Promo code ${formatted} (${discountPercent}% OFF) created successfully!` };
+}
+
+/**
+ * Admin: Toggles promo code active status
+ */
+export function toggleDiscountCodeStatus(code: string): boolean {
+  const formatted = (code || '').trim().toUpperCase();
+  const codes = getDiscountCodes();
+  const found = codes.find((c) => c.code === formatted);
+  if (!found) return false;
+
+  found.isActive = found.isActive === false ? true : false;
+  return saveDiscountCodes(codes);
+}
+
+/**
+ * Admin: Resets redeemed state or deletes custom code
+ */
+export function resetOrDeleteDiscountCode(code: string, deleteCode: boolean = false): boolean {
+  const formatted = (code || '').trim().toUpperCase();
+  let codes = getDiscountCodes();
+  if (deleteCode) {
+    codes = codes.filter((c) => c.code !== formatted);
+    return saveDiscountCodes(codes);
+  }
+
+  const found = codes.find((c) => c.code === formatted);
+  if (!found) return false;
+  found.isUsed = false;
+  delete found.usedWithOrderId;
+  delete found.usedByStudentId;
+  delete found.usedByStudentName;
+  delete found.usedByEmail;
+  delete found.usedAt;
+  return saveDiscountCodes(codes);
 }
 
 /**
@@ -640,15 +747,10 @@ export function registerStudentInCentralDb(
   const assignedIndexId = getAssignedIndexId(input.program, input.group);
   const targetExam = `${input.program} — ${input.group}`;
 
-  // Seed syllabus tracker rows (for mentorship tracker)
-  const syllabus = ICSI_OFFICIAL_SYLLABUS[assignedIndexId];
-  const trackerRows = syllabus
-    ? buildTrackerRowsFromSyllabusGroup(syllabus, assignedIndexId)
-    : [];
+  // Seed syllabus tracker rows (for mentorship tracker) using official ICSI syllabus
+  const trackerRows = generateDefaultChapters(input.program, toMentorshipGroup(input.group));
   // Seed study index rows (for the student-editable Study Progress Index)
-  const studyIndexRows = syllabus
-    ? buildTrackerRowsFromSyllabusGroup(syllabus, assignedIndexId)
-    : [];
+  const studyIndexRows = generateDefaultChapters(input.program, toMentorshipGroup(input.group));
 
   const studentCount = all.length + 1;
   const studentId = `STU-2026-${String(studentCount).padStart(3, '0')}`;
@@ -704,7 +806,7 @@ export function registerStudentInCentralDb(
 
 export function approveStudentRegistration(
   studentId: string,
-  adminName = 'CS Harkiran Kaur'
+  adminName = 'Harkiran Kaur'
 ): { success: boolean; message: string } {
   const all = getAllStudents();
   const idx = all.findIndex((s) => s.studentId === studentId);
@@ -742,7 +844,7 @@ export function approveStudentRegistration(
 export function rejectStudentRegistration(
   studentId: string,
   reason: string,
-  adminName = 'CS Harkiran Kaur'
+  adminName = 'Harkiran Kaur'
 ): { success: boolean; message: string } {
   const all = getAllStudents();
   const idx = all.findIndex((s) => s.studentId === studentId);
@@ -777,6 +879,9 @@ export function rejectStudentRegistration(
 
 export interface SubmitPaymentInput {
   studentId: string;
+  email?: string;
+  fullName?: string;
+  phone?: string;
   courseId: string;
   courseName: string;
   amount: number;
@@ -792,9 +897,42 @@ export function submitStudentCoursePayment(
   input: SubmitPaymentInput
 ): { success: boolean; message: string; orderId?: string } {
   const all = getAllStudents();
-  const idx = all.findIndex((s) => s.studentId === input.studentId);
+  const cleanEmail = (input.email || '').trim().toLowerCase();
+  let idx = all.findIndex(
+    (s) =>
+      s.studentId === input.studentId ||
+      (cleanEmail && s.email.toLowerCase() === cleanEmail)
+  );
+
   if (idx === -1) {
-    return { success: false, message: 'Student record not found.' };
+    // Auto-create student record so the payment is immediately trackable by admin
+    const syllabus = ICSI_OFFICIAL_SYLLABUS['exec-g1'];
+    const rows = syllabus ? buildTrackerRowsFromSyllabusGroup(syllabus, 'exec-g1') : [];
+    const newStudent: CentralStudent = {
+      studentId: input.studentId || `std_${Date.now()}`,
+      fullName: input.fullName || 'CS Aspirant',
+      email: cleanEmail || `${input.studentId}@student.hkcodeofrankers.com`,
+      phone: input.phone || '',
+      program: 'CS Executive',
+      level: 'Level 2',
+      group: 'Group 1',
+      targetExam: 'CS Executive — Group 1',
+      password: 'registered_via_payment',
+      registrationStatus: 'approved',
+      paymentStatus: 'pending_approval',
+      mentorshipAccess: false,
+      studyIndexAccess: false,
+      assignedIndexId: 'exec-g1',
+      trackerRows: rows,
+      studyIndexRows: rows,
+      monthlyCalls: createDefault12MonthCalls(),
+      isActive: true,
+      role: 'student',
+      registeredAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    all.unshift(newStudent);
+    idx = 0;
   }
 
   const student = all[idx];
@@ -844,7 +982,7 @@ export function submitStudentCoursePayment(
 
 export function approveStudentPayment(
   studentId: string,
-  adminName = 'CS Harkiran Kaur'
+  adminName = 'Harkiran Kaur'
 ): { success: boolean; message: string } {
   const all = getAllStudents();
   const idx = all.findIndex((s) => s.studentId === studentId);
@@ -856,32 +994,112 @@ export function approveStudentPayment(
   student.paymentStatus = 'approved';
   student.paymentApprovedAt = new Date().toISOString();
 
-  // Differentiate Mentorship Course vs. CS Study Progress Index (₹999)
+  // Differentiate Mentorship Course vs. HK StudyTrack Pro – CS Progress Index
   const isStudyIndexProduct =
-    student.purchasedCourse?.courseId === 'cs-study-progress-index' ||
+    student.purchasedCourse?.courseId?.includes('studytrack') ||
+    student.purchasedCourse?.courseId?.includes('study-progress-index') ||
+    student.purchasedCourse?.courseName?.toLowerCase().includes('studytrack') ||
     student.purchasedCourse?.courseName?.toLowerCase().includes('study progress index') ||
     student.purchasedCourse?.courseName?.toLowerCase().includes('progress index');
 
   if (isStudyIndexProduct) {
     student.studyIndexAccess = true;
     if (!student.studyIndexRows || student.studyIndexRows.length === 0) {
-      const syllabus = ICSI_OFFICIAL_SYLLABUS[student.assignedIndexId];
-      if (syllabus) {
-        student.studyIndexRows = buildTrackerRowsFromSyllabusGroup(syllabus, student.assignedIndexId);
-      }
+      student.studyIndexRows = generateDefaultChapters(student.program, toMentorshipGroup(student.group));
     }
   } else {
-    // Mentorship Course payment
+    // Mentorship Course payment: student receives full mentorship access AND automatically gets
+    // access to the HK StudyTrack Pro – CS Progress Index corresponding to their registered program/group only
     student.mentorshipAccess = true;
+    student.studyIndexAccess = true;
+    if (!student.studyIndexRows || student.studyIndexRows.length === 0) {
+      student.studyIndexRows = generateDefaultChapters(student.program, toMentorshipGroup(student.group));
+    }
   }
 
   if (student.purchasedCourse) {
     student.purchasedCourse.reviewedAt = new Date().toISOString();
     student.purchasedCourse.reviewedBy = adminName;
+    student.purchasedCourse.paymentStatus = 'approved';
   }
   student.updatedAt = new Date().toISOString();
 
   saveAllStudents(all);
+
+  // Synchronize orders in localStorage so student portal immediately drops pending banners
+  try {
+    const studentEmailLower = (student.email || '').trim().toLowerCase();
+    const studentPhoneClean = (student.phone || '').replace(/\D/g, '');
+
+    // 1. Update hk_rankers_orders_master and hk_rankers_orders
+    const orderStorageKeys = ['hk_rankers_orders_master', 'hk_rankers_orders'];
+    orderStorageKeys.forEach((key) => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const orders = JSON.parse(raw);
+          let modified = false;
+          orders.forEach((ord: any) => {
+            const ordEmail = (ord.billingDetails?.email || '').trim().toLowerCase();
+            const ordPhone = (ord.billingDetails?.phone || '').replace(/\D/g, '');
+            const ordUserId = ord.userId || '';
+            const ordUtr = ord.utrNumber;
+            const studentUtr = student.purchasedCourse?.transactionRef || student.purchasedCourse?.utrNumber;
+
+            const isMatch =
+              (studentEmailLower && ordEmail && studentEmailLower === ordEmail) ||
+              (studentPhoneClean && ordPhone && studentPhoneClean === ordPhone) ||
+              (ordUserId && ordUserId === student.studentId) ||
+              (ordUtr && studentUtr && ordUtr === studentUtr);
+
+            if (isMatch && ord.status !== 'COMPLETED') {
+              ord.status = 'COMPLETED';
+              ord.approvedAt = new Date().toISOString();
+              modified = true;
+            }
+          });
+          if (modified) {
+            localStorage.setItem(key, JSON.stringify(orders));
+            window.dispatchEvent(new Event('storage'));
+          }
+        }
+      } catch (err) {
+        console.warn(`Error updating ${key}:`, err);
+      }
+    });
+
+    // 2. Update registered users store
+    try {
+      const usersRaw = localStorage.getItem('hk_rankers_registered_users');
+      if (usersRaw) {
+        const users = JSON.parse(usersRaw);
+        let userMod = false;
+        users.forEach((u: any) => {
+          const uEmail = (u.email || '').trim().toLowerCase();
+          const uPhone = (u.phone || '').replace(/\D/g, '');
+          if (
+            (studentEmailLower && uEmail === studentEmailLower) ||
+            (studentPhoneClean && uPhone === studentPhoneClean) ||
+            u.id === student.studentId
+          ) {
+            u.approvalStatus = 'approved';
+            u.paymentStatus = 'approved';
+            u.mentorshipAccess = true;
+            u.studyIndexAccess = true;
+            u.updatedAt = new Date().toISOString();
+            userMod = true;
+          }
+        });
+        if (userMod) {
+          localStorage.setItem('hk_rankers_registered_users', JSON.stringify(users));
+        }
+      }
+    } catch (err) {
+      console.warn('Error updating registered users on approval:', err);
+    }
+  } catch (syncErr) {
+    console.warn('Order sync on approveStudentPayment notice:', syncErr);
+  }
 
   // Send Payment Approval & Course Activation Email
   if (student.purchasedCourse) {
@@ -904,7 +1122,7 @@ export function approveStudentPayment(
 export function rejectStudentPayment(
   studentId: string,
   reason: string,
-  adminName = 'CS Harkiran Kaur'
+  adminName = 'Harkiran Kaur'
 ): { success: boolean; message: string } {
   const all = getAllStudents();
   const idx = all.findIndex((s) => s.studentId === studentId);
@@ -954,18 +1172,43 @@ export function updateStudentTrackerRows(
 }
 
 /**
- * CS STUDY PROGRESS INDEX (₹999) — Student Editable
- * Allows student to update their own study progress index rows
+ * HK StudyTrack Pro – CS Progress Index — Student Editable
+ * Allows student to update their own study progress index rows (persists across login/logout)
  */
 export function updateStudentStudyIndexRows(
-  studentId: string,
+  studentIdOrEmail: string,
   newRows: TrackerRow[]
+): boolean {
+  const all = getAllStudents();
+  const clean = (studentIdOrEmail || '').trim().toLowerCase();
+  const idx = all.findIndex(
+    (s) => s.studentId.toLowerCase() === clean || s.email.toLowerCase() === clean
+  );
+  if (idx === -1) return false;
+
+  all[idx].studyIndexRows = newRows;
+  all[idx].updatedAt = new Date().toISOString();
+
+  saveAllStudents(all);
+  return true;
+}
+
+/**
+ * Direct toggle for Study Progress Index Edit Access (Admin control)
+ */
+export function toggleStudentStudyIndexAccess(
+  studentId: string,
+  grantAccess?: boolean
 ): boolean {
   const all = getAllStudents();
   const idx = all.findIndex((s) => s.studentId === studentId);
   if (idx === -1) return false;
 
-  all[idx].studyIndexRows = newRows;
+  const newStatus = grantAccess !== undefined ? grantAccess : !all[idx].studyIndexAccess;
+  all[idx].studyIndexAccess = newStatus;
+  if (newStatus && (!all[idx].studyIndexRows || all[idx].studyIndexRows?.length === 0)) {
+    all[idx].studyIndexRows = generateDefaultChapters(all[idx].program, toMentorshipGroup(all[idx].group));
+  }
   all[idx].updatedAt = new Date().toISOString();
 
   saveAllStudents(all);
@@ -1067,64 +1310,26 @@ export function getAllSlotBookings(): SlotBookingRecord[] {
     const raw = localStorage.getItem(SLOT_BOOKINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Strip out any fake seeded demo records
+        const cleaned = parsed.filter(
+          (s: SlotBookingRecord) =>
+            !s.id?.startsWith('SLOT-2026-') &&
+            s.studentName !== 'Aarav Sharma' &&
+            s.studentName !== 'Riya Patel' &&
+            s.studentName !== 'Pooja Kulkarni'
+        );
+        if (cleaned.length !== parsed.length) {
+          saveAllSlotBookings(cleaned);
+        }
+        return cleaned;
+      }
     }
   } catch {
     // fallback
   }
 
-  const seeded: SlotBookingRecord[] = [
-    {
-      id: 'SLOT-2026-001',
-      studentId: 'STU-2026-001',
-      studentName: 'Aarav Sharma',
-      email: 'aarav.sharma@gmail.com',
-      phone: '9876543210',
-      program: 'CS EET',
-      group: 'EET',
-      bookingDate: '2026-09-24',
-      bookingTime: '11:30 AM',
-      callType: 'Mentorship 1: Personal Syllabus Tracking',
-      notes: 'Initial syllabus audit and backlog target setup.',
-      status: 'confirmed',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      adminRemarks: 'Slot confirmed. Zoom / WhatsApp link shared.',
-    },
-    {
-      id: 'SLOT-2026-002',
-      studentId: 'STU-2026-002',
-      studentName: 'Riya Patel',
-      email: 'riya.patel@gmail.com',
-      phone: '9876543211',
-      program: 'CS Executive',
-      group: 'Group 1',
-      bookingDate: '2026-09-25',
-      bookingTime: '04:00 PM',
-      callType: 'Mentorship 2: Study & Progress Mentorship',
-      notes: 'Need guidance on JIGL Bare Act case law citations and answer structuring.',
-      status: 'pending',
-      createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    },
-    {
-      id: 'SLOT-2026-003',
-      studentId: 'STU-2026-004',
-      studentName: 'Pooja Kulkarni',
-      email: 'pooja.kulkarni@gmail.com',
-      phone: '9876543213',
-      program: 'CS Professional',
-      group: 'Group 1',
-      bookingDate: '2026-09-27',
-      bookingTime: '06:30 PM',
-      callType: 'Mentorship 3: Performance & Revision Review',
-      notes: 'Discussion on Drafting & Pleadings mock test paper evaluation.',
-      status: 'confirmed',
-      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      adminRemarks: 'Answer sheet review scheduled.',
-    },
-  ];
-
-  saveAllSlotBookings(seeded);
-  return seeded;
+  return [];
 }
 
 export function saveAllSlotBookings(bookings: SlotBookingRecord[]): void {
@@ -1219,44 +1424,66 @@ export function deleteSlotBooking(bookingId: string): boolean {
 // ====================================================================
 
 export function getAllFreeSlotBookings(): FreeSlotBookingRecord[] {
+  let bookings: FreeSlotBookingRecord[] = [];
   try {
     const raw = localStorage.getItem(FREE_SLOT_BOOKINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Strip only old mock names if any
+        bookings = parsed.filter(
+          (b: FreeSlotBookingRecord) =>
+            b.name !== 'Aditya Verma' &&
+            b.name !== 'Sneha Rao'
+        );
+      }
     }
   } catch {
-    // ignore
+    bookings = [];
   }
 
-  const seeded: FreeSlotBookingRecord[] = [
-    {
-      id: 'FREE-2026-001',
-      name: 'Aditya Verma',
-      email: 'aditya.verma@gmail.com',
-      phone: '9823456781',
-      program: 'CS Executive Group 1',
-      preferredSlot: 'Tomorrow Evening (4:00 PM - 6:00 PM)',
-      notes: 'Need guidance on clearing JIGL & Company Law in 1st attempt.',
-      status: 'pending',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: 'FREE-2026-002',
-      name: 'Sneha Rao',
-      email: 'sneha.rao@gmail.com',
-      phone: '9845123980',
-      program: 'Class 12th Pass (CS Career Roadmap)',
-      preferredSlot: 'Weekend Special Slot',
-      notes: 'Parent inquiry on CSEET preparation timeline and registration fees.',
-      status: 'confirmed',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      adminRemarks: 'Call confirmed for Saturday 11 AM.',
-    },
-  ];
+  // Also check hk_local_enrollments to ensure any counselling/free slot leads are captured
+  try {
+    const localEnrollmentsRaw = localStorage.getItem('hk_local_enrollments');
+    if (localEnrollmentsRaw) {
+      const parsedEnrollments = JSON.parse(localEnrollmentsRaw);
+      if (Array.isArray(parsedEnrollments)) {
+        parsedEnrollments.forEach((item: any, idx: number) => {
+          const isFreeSession =
+            item.status === 'counselling_booking' ||
+            item.status === 'free_session' ||
+            (item.program && item.program.toLowerCase().includes('counselling')) ||
+            (item.program && item.program.toLowerCase().includes('free'));
 
-  saveAllFreeSlotBookings(seeded);
-  return seeded;
+          if (isFreeSession && (item.name || item.phone || item.email)) {
+            const alreadyExists = bookings.some(
+              (b) =>
+                (item.phone && b.phone === item.phone) ||
+                (item.email && b.email.toLowerCase() === item.email.toLowerCase())
+            );
+            if (!alreadyExists) {
+              const bookingId = `FREE-2026-${String(bookings.length + idx + 1).padStart(3, '0')}`;
+              bookings.push({
+                id: bookingId,
+                name: item.name || 'CS Aspirant',
+                email: item.email || `${(item.phone || '').replace(/\D/g, '')}@student.hkcodeofrankers.com`,
+                phone: item.phone || '',
+                program: item.program || '1-on-1 Free Strategy Call',
+                preferredSlot: item.attempt || item.notes || 'Tomorrow Evening',
+                notes: item.notes,
+                status: 'pending',
+                createdAt: item.created_at || item.local_saved_at || new Date().toISOString(),
+              });
+            }
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Harvesting free session bookings notice:', err);
+  }
+
+  return bookings;
 }
 
 export function saveAllFreeSlotBookings(bookings: FreeSlotBookingRecord[]): void {

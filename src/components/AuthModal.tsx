@@ -240,7 +240,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onNavigate }) => {
   };
 
   const openWhatsAppHelp = (email?: string) => {
-    const text = `Hello CS Harkiran Kaur, I registered on HK Code of Rankers with email: ${email || loginInput || regEmail || 'my email'}. Please verify and approve my student portal access. Thank you!`;
+    const text = `Hello Harkiran Kaur, I registered on HK Code of Rankers with email: ${email || loginInput || regEmail || 'my email'}. Please verify and approve my student portal access. Thank you!`;
     window.open(`https://wa.me/919284084523?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -295,7 +295,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onNavigate }) => {
                 </h3>
                 <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
                   Thank you, <strong>{regFullName}</strong>! Your registration is now listed in the Admin Portal for review by{' '}
-                  <span className="text-[#FFE3A0] font-semibold">CS Harkiran Kaur Kohli</span>.
+                  <span className="text-[#FFE3A0] font-semibold">Harkiran Kaur Kohli</span>.
                 </p>
               </div>
 
@@ -641,7 +641,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onNavigate }) => {
                   </button>
 
                   <p className="text-[10px] text-gray-400 text-center">
-                    Upon submission, your application appears automatically in CS Harkiran Kaur's Admin Portal.
+                    Upon submission, your application appears automatically in Harkiran Kaur's Admin Portal.
                   </p>
                 </form>
               )}

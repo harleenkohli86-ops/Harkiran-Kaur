@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const adminProfile: UserProfile = {
         id: 'usr_master_admin',
         studentId: 'ADMIN-001',
-        fullName: 'CS Harkiran Kaur Kohli',
+        fullName: 'Harkiran Kaur Kohli',
         email: cleanInput,
         phone: '+91 92840 84523',
         targetExam: 'Master Admin / Head Mentor',

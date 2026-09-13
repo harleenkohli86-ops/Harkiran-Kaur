@@ -188,16 +188,15 @@ export async function saveCounsellingBooking(data: {
   // Also sync directly to Central Free Slot Bookings Database
   try {
     const { createFreeSlotBooking } = await import('../services/centralStudentDatabase');
-    if (cleanEmail) {
-      createFreeSlotBooking({
-        name: data.name,
-        email: cleanEmail,
-        phone: data.phone,
-        program: data.examLevel,
-        preferredSlot: data.date,
-        notes: data.notes,
-      });
-    }
+    const finalEmail = cleanEmail || `${(data.phone || '').replace(/\D/g, '')}@student.hkcodeofrankers.com`;
+    createFreeSlotBooking({
+      name: data.name,
+      email: finalEmail,
+      phone: data.phone,
+      program: data.examLevel,
+      preferredSlot: data.date,
+      notes: data.notes,
+    });
   } catch (err) {
     console.warn('Central free slot sync notice:', err);
   }
@@ -265,10 +264,17 @@ export async function checkMasterAdminSlotStatus(): Promise<{
     const localAdmin = localStorage.getItem(ADMIN_STORAGE_KEY);
     if (localAdmin) {
       const parsed = JSON.parse(localAdmin);
+      const cleanName = (parsed.name || '').includes('Harshita') ? 'Harkiran Kaur' : (parsed.name || 'Harkiran Kaur');
+      const cleanEmail = (parsed.email || '').includes('harshita') ? 'admin@hkcodeofrankers.com' : (parsed.email || 'admin@hkcodeofrankers.com');
+      if (parsed.name !== cleanName || parsed.email !== cleanEmail) {
+        parsed.name = cleanName;
+        parsed.email = cleanEmail;
+        localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(parsed));
+      }
       return {
         claimed: true,
-        adminEmail: parsed.email,
-        adminName: parsed.name,
+        adminEmail: cleanEmail,
+        adminName: cleanName,
         created_at: parsed.created_at,
       };
     }
@@ -448,7 +454,12 @@ export function getActiveAdminSession(): AdminSession | null {
   try {
     const raw = localStorage.getItem(ADMIN_SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const session: AdminSession = JSON.parse(raw);
+    if (session.adminName && session.adminName.includes('Harshita')) {
+      session.adminName = 'Harkiran Kaur';
+      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    }
+    return session;
   } catch {
     return null;
   }

@@ -33,7 +33,7 @@ export const ThankYouModal: React.FC<ThankYouModalProps> = ({ onNavigate }) => {
 
   const whatsAppManualUrl = `https://wa.me/919284084523?text=${encodeURIComponent(
     `*ENROLLMENT CONFIRMATION — HK CODE OF RANKERS*\n\n` +
-    `Hello CS Harkiran Kaur ma'am,\n` +
+    `Hello Harkiran Kaur ma'am,\n` +
     `I have completed my enrollment on HK Code of Rankers.\n\n` +
     `• Student Name: ${latestOrder.billingDetails.fullName}\n` +
     `• Registered Mobile: ${latestOrder.billingDetails.phone}\n` +

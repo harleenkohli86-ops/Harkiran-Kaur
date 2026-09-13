@@ -36,9 +36,15 @@ import {
   FileText,
   Bookmark,
   BookOpen,
+  PhoneCall,
 } from 'lucide-react';
 import { PageId } from '../types';
 import { AdminMentorshipManager } from '../components/AdminMentorshipManager';
+import { FreeSlotBookingsTab } from '../components/admin/FreeSlotBookingsTab';
+import {
+  getAllFreeSlotBookings,
+  FreeSlotBookingRecord,
+} from '../services/centralStudentDatabase';
 import {
   deleteStudentMentorshipProfile,
   getOrCreateStudentMentorship,
@@ -60,6 +66,7 @@ import {
 import { generateInvoicePDF } from '../services/invoiceService';
 import {
   sendStudentConfirmationEmail,
+  sendEnquiryConfirmationEmail,
   generateStudentConfirmationEmailHtml,
   generateStudentConfirmationEmailPlainText,
   getGmailComposeUrl,
@@ -129,8 +136,25 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'contacted' | 'confirmed' | 'completed'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  // Admin Active Tab: 'appointments' | 'upi_verification' | 'mentorship_tracker'
-  const [adminTab, setAdminTab] = useState<'appointments' | 'upi_verification' | 'mentorship_tracker'>('appointments');
+  // Admin Active Tab: 'appointments' | 'upi_verification' | 'free_sessions' | 'mentorship_tracker'
+  const [adminTab, setAdminTab] = useState<'appointments' | 'upi_verification' | 'free_sessions' | 'mentorship_tracker'>('appointments');
+  const [freeSlotBookings, setFreeSlotBookings] = useState<FreeSlotBookingRecord[]>(() => getAllFreeSlotBookings());
+
+  const loadFreeSlotBookings = () => {
+    setFreeSlotBookings(getAllFreeSlotBookings());
+  };
+
+  // Keep freeSlotBookings updated periodically & on focus
+  useEffect(() => {
+    loadFreeSlotBookings();
+    const handleFocus = () => loadFreeSlotBookings();
+    window.addEventListener('focus', handleFocus);
+    const interval = setInterval(loadFreeSlotBookings, 15000);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Direct Dispatch Action Modal State (Gmail 1-click send, WhatsApp dispatch, and PDF Invoice)
   const [dispatchModalData, setDispatchModalData] = useState<{
@@ -305,16 +329,38 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
       const utr = appt.utr_number || (appt.notes?.match(/\d{12}/)?.[0]) || 'Direct UPI Transfer';
 
-      // 1. Prepare and send confirmation email package
-      const emailResult = await sendStudentConfirmationEmail({
-        studentName: appt.name,
-        studentEmail: studentEmail,
-        studentPhone: appt.phone,
-        programName: programName,
-        amount: appt.amount || 2999,
-        utrNumber: utr,
-        orderNumber: orderNumber,
-      });
+      const isEnquiryOrCounselling =
+        appt.status === 'inquiry' ||
+        appt.status === 'counselling_booking' ||
+        appt.status === 'free_session' ||
+        appt.program?.toLowerCase().includes('counselling') ||
+        appt.program?.toLowerCase().includes('inquiry') ||
+        appt.program?.toLowerCase().includes('enquiry') ||
+        appt.program?.toLowerCase().includes('free') ||
+        (!appt.amount && !appt.utr_number);
+
+      let emailResult;
+      if (isEnquiryOrCounselling) {
+        // Send Customized Enquiry Confirmation Email (No fake payment receipt)
+        emailResult = await sendEnquiryConfirmationEmail({
+          candidateName: appt.name,
+          candidateEmail: studentEmail,
+          candidatePhone: appt.phone,
+          programName: programName,
+          notes: appt.notes,
+        });
+      } else {
+        // Prepare and send official payment confirmation email package
+        emailResult = await sendStudentConfirmationEmail({
+          studentName: appt.name,
+          studentEmail: studentEmail,
+          studentPhone: appt.phone,
+          programName: programName,
+          amount: appt.amount || 2999,
+          utrNumber: utr,
+          orderNumber: orderNumber,
+        });
+      }
 
       // Show the Direct Dispatch Modal with 1-Click Gmail, WhatsApp, and PDF Invoice
       setDispatchModalData({
@@ -1087,6 +1133,23 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
           </button>
 
           <button
+            onClick={() => setAdminTab('free_sessions')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-montserrat font-bold flex items-center gap-2 transition-all cursor-pointer ${
+              adminTab === 'free_sessions'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                : 'bg-emerald-50 border border-emerald-300 text-emerald-900 hover:bg-emerald-100'
+            }`}
+          >
+            <PhoneCall className="w-4 h-4 text-emerald-600" />
+            <span>Free Session Bookings ({freeSlotBookings.length})</span>
+            {freeSlotBookings.filter((b) => b.status === 'pending').length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-extrabold animate-pulse">
+                {freeSlotBookings.filter((b) => b.status === 'pending').length} New
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => setAdminTab('mentorship_tracker')}
             className={`py-2.5 px-4 rounded-xl text-xs font-montserrat font-bold flex items-center gap-2 transition-all cursor-pointer ${
               adminTab === 'mentorship_tracker'
@@ -1103,10 +1166,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* ========================================================================= */}
-        {/* TAB 0: STUDENT MENTORSHIP TRACKER & LIVE PORTAL CONTROL                   */}
+        {/* TAB VIEWS                                                                 */}
         {/* ========================================================================= */}
         {adminTab === 'mentorship_tracker' ? (
           <AdminMentorshipManager onNavigate={onNavigate} />
+        ) : adminTab === 'free_sessions' ? (
+          <FreeSlotBookingsTab bookings={freeSlotBookings} onRefresh={loadFreeSlotBookings} />
         ) : (
           <div className="space-y-6">
             {/* Direct UPI Payee Credentials Strip */}
@@ -1450,7 +1515,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                                     onClick={() => handleApproveAndSendEmail(appt)}
                                     disabled={isApproving}
                                     className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-montserrat font-bold text-[11px] rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                    title="Approve enrollment and dispatch branded confirmation email with logo"
+                                    title={isCounselling ? "Confirm student enquiry and dispatch customized enquiry confirmation email" : "Approve enrollment and dispatch branded confirmation email with logo"}
                                   >
                                     {isApproving ? (
                                       <>
@@ -1460,7 +1525,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                                     ) : (
                                       <>
                                         <Check className="w-3.5 h-3.5" />
-                                        <span>Approve & Send Email</span>
+                                        <span>{isCounselling ? 'Confirm Enquiry & Send Email' : 'Approve & Send Email'}</span>
                                       </>
                                     )}
                                   </button>
