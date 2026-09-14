@@ -188,7 +188,9 @@ export const PaymentApprovalsTab: React.FC<PaymentApprovalsTabProps> = ({
                   const isPending = s.paymentStatus === 'pending_approval';
                   const isApproved = s.paymentStatus === 'approved';
                   const isRejected = s.paymentStatus === 'rejected';
-                  const utr = course?.utrNumber || 'N/A';
+                  const utr = course?.utrNumber || course?.transactionRef || 'N/A';
+                  const amount = course?.finalAmount || course?.amount || 2999;
+                  const paymentDate = course?.paymentDate || (course as any)?.paidAt || s.updatedAt;
 
                   return (
                     <tr
@@ -224,12 +226,12 @@ export const PaymentApprovalsTab: React.FC<PaymentApprovalsTabProps> = ({
                       {/* Amount & Discount */}
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-[#8A651E] text-xs font-montserrat">
-                          ₹{(course?.amount || 2999).toLocaleString('en-IN')}
+                          ₹{amount.toLocaleString('en-IN')}
                         </div>
-                        {course?.discountCode && (
+                        {(course?.discountCodeUsed || (course as any)?.discountCode) && (
                           <div className="inline-flex items-center gap-1 px-1.5 py-0.2 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded text-[9px] font-bold font-mono mt-0.5">
                             <Tag className="w-2.5 h-2.5 text-emerald-600" />
-                            <span>{course.discountCode}</span>
+                            <span>{course?.discountCodeUsed || (course as any)?.discountCode}</span>
                           </div>
                         )}
                       </td>
@@ -267,11 +269,13 @@ export const PaymentApprovalsTab: React.FC<PaymentApprovalsTabProps> = ({
                           {course?.orderId || `ORD-${s.studentId.slice(-6)}`}
                         </div>
                         <div className="text-[10px] text-gray-400">
-                          {course?.paidAt
-                            ? new Date(course.paidAt).toLocaleDateString('en-IN', {
+                          {paymentDate
+                            ? new Date(paymentDate).toLocaleString('en-IN', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
                               })
                             : 'Pending'}
                         </div>
@@ -329,7 +333,7 @@ export const PaymentApprovalsTab: React.FC<PaymentApprovalsTabProps> = ({
                             </>
                           )}
 
-                          {isApproved && (
+                          {isApproved && onOpenMentorshipChart && (
                             <button
                               onClick={() => onOpenMentorshipChart(s)}
                               className="px-3 py-1.5 bg-gradient-to-r from-[#1C1917] to-[#2E2419] hover:bg-black text-[#FFE3A0] border border-[#C8A45D]/60 font-montserrat font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"

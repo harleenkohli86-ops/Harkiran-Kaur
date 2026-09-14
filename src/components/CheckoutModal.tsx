@@ -312,7 +312,34 @@ export const CheckoutModal: React.FC = () => {
 
     setIsProcessing(true);
 
+    // CRITICAL: Cache cart values BEFORE createOrder clears the cart
+    const cachedSubtotal = subtotal;
+    const cachedDiscount = discountAmount;
+    const cachedTotal = totalAmount;
+    const cachedCoupon = couponCode;
+    const cachedCourseTitle = courseTitle || 'CS Mentorship Batch';
+    const cachedCourseId = cartItems[0]?.product.id || 'cs-mentorship';
+    const studentUid = user?.studentId || user?.id || `std_${billing.phone.replace(/\D/g, '') || Date.now()}`;
+
     try {
+      // 1. Submit payment to Central Student Database FIRST
+      submitStudentCoursePayment({
+        studentId: studentUid,
+        email: billing.email,
+        fullName: billing.fullName,
+        phone: billing.phone,
+        courseId: cachedCourseId,
+        courseName: cachedCourseTitle,
+        amount: cachedSubtotal,
+        discountCode: cachedCoupon || undefined,
+        discountAmount: cachedDiscount || 0,
+        finalAmount: cachedTotal,
+        paymentMethod: 'UPI',
+        transactionRef: validation.cleanedUtr,
+        paymentProofNotes: `Direct UPI transfer submitted with UTR: ${validation.cleanedUtr}`,
+      });
+
+      // 2. Create order in OrderContext
       const res = await createOrder('UPI', billing, {
         utrNumber: validation.cleanedUtr,
       });
@@ -320,21 +347,6 @@ export const CheckoutModal: React.FC = () => {
       setIsProcessing(false);
 
       if (res.success) {
-        submitStudentCoursePayment({
-          studentId: user?.studentId || user?.id || `std_${billing.phone.replace(/\D/g, '') || Date.now()}`,
-          email: billing.email,
-          fullName: billing.fullName,
-          phone: billing.phone,
-          courseId: cartItems[0]?.product.id || 'cs-mentorship',
-          courseName: courseTitle,
-          amount: subtotal,
-          discountCode: couponCode || undefined,
-          discountAmount: discountAmount || 0,
-          finalAmount: totalAmount,
-          paymentMethod: 'UPI',
-          transactionRef: validation.cleanedUtr,
-          paymentProofNotes: `Direct UPI transfer submitted with UTR: ${validation.cleanedUtr}`,
-        });
         setIsCheckoutModalOpen(false);
       } else {
         setPaymentError(res.message);

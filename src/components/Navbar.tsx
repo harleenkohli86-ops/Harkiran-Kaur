@@ -186,6 +186,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span className="text-[9px] px-1.5 py-0.5 bg-[#C8A45D]/20 text-[#8A651E] rounded font-bold">Directory</span>
                     </button>
                     <button
+                      onClick={() => {
+                        sessionStorage.setItem('hk_programs_tab', 'june2027');
+                        handleNavClick('programs');
+                        window.dispatchEvent(new CustomEvent('switch-programs-tab', { detail: 'june2027' }));
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-xs bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent hover:bg-amber-500/25 flex items-center justify-between cursor-pointer font-bold border-l-2 border-[#C8A45D] transition-colors"
+                    >
+                      <span className="flex items-center gap-2 text-[#7A5816]">
+                        <Sparkles className="w-4 h-4 text-[#C8A45D] fill-[#C8A45D]" />
+                        <span>2027 Batches (CSEET Feb • Exec & Prof June)</span>
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-[#C8A45D] text-black rounded font-black uppercase shadow-xs">
+                        50% OFF
+                      </span>
+                    </button>
+                    <button
                       onClick={() => handleNavClick('programs')}
                       className="w-full text-left px-4 py-2.5 text-xs text-[#2D2D2D] hover:text-[#8A651E] hover:bg-[#F8F6F2] flex items-center justify-between cursor-pointer font-medium border-l-2 border-transparent hover:border-[#C8A45D] transition-colors"
                     >
@@ -435,6 +451,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] font-semibold text-[#8A651E] uppercase tracking-widest px-3">
                 Programs & Courses
               </span>
+              <div className="mt-1 mb-2 px-1">
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem('hk_programs_tab', 'june2027');
+                    handleNavClick('programs');
+                    window.dispatchEvent(new CustomEvent('switch-programs-tab', { detail: 'june2027' }));
+                  }}
+                  className="w-full text-left px-3 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 border border-[#C8A45D]/50 rounded-lg text-amber-950 text-xs font-extrabold flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C8A45D] fill-[#C8A45D]" />
+                    <span>2027 Batches (Feb &amp; June)</span>
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-[#C8A45D] text-black font-black rounded uppercase">
+                    50% OFF
+                  </span>
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-1 mt-1">
                 <button
                   onClick={() => handleNavClick('programs')}

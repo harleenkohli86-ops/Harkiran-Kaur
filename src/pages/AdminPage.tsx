@@ -41,9 +41,15 @@ import {
 import { PageId } from '../types';
 import { AdminMentorshipManager } from '../components/AdminMentorshipManager';
 import { FreeSlotBookingsTab } from '../components/admin/FreeSlotBookingsTab';
+import { PaymentApprovalsTab } from '../components/admin/PaymentApprovalsTab';
 import {
   getAllFreeSlotBookings,
+  getAllStudents,
+  approveStudentPayment,
+  rejectStudentPayment,
+  subscribeToDatabaseChanges,
   FreeSlotBookingRecord,
+  CentralStudent,
 } from '../services/centralStudentDatabase';
 import {
   deleteStudentMentorshipProfile,
@@ -115,6 +121,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [adminInputToken, setAdminInputToken] = useState('');
   const [pendingAdminEmail, setPendingAdminEmail] = useState('');
   const [tokenGmailUrl, setTokenGmailUrl] = useState('');
+  const [tokenHint, setTokenHint] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
@@ -145,22 +152,78 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   // Admin Active Tab: 'appointments' | 'upi_verification' | 'free_sessions' | 'mentorship_tracker'
   const [adminTab, setAdminTab] = useState<'appointments' | 'upi_verification' | 'free_sessions' | 'mentorship_tracker'>('appointments');
   const [freeSlotBookings, setFreeSlotBookings] = useState<FreeSlotBookingRecord[]>(() => getAllFreeSlotBookings());
+  const [centralStudents, setCentralStudents] = useState<CentralStudent[]>(() => getAllStudents());
 
   const loadFreeSlotBookings = () => {
     setFreeSlotBookings(getAllFreeSlotBookings());
   };
 
-  // Keep freeSlotBookings updated periodically & on focus
+  const loadCentralStudents = () => {
+    setCentralStudents(getAllStudents());
+  };
+
+  // Keep freeSlotBookings & centralStudents updated periodically & on focus/db change
   useEffect(() => {
     loadFreeSlotBookings();
-    const handleFocus = () => loadFreeSlotBookings();
+    loadCentralStudents();
+    const handleFocus = () => {
+      loadFreeSlotBookings();
+      loadCentralStudents();
+    };
     window.addEventListener('focus', handleFocus);
-    const interval = setInterval(loadFreeSlotBookings, 15000);
+    const interval = setInterval(() => {
+      loadFreeSlotBookings();
+      loadCentralStudents();
+    }, 15000);
+    const unsubscribe = subscribeToDatabaseChanges(() => {
+      loadCentralStudents();
+    });
     return () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
+      unsubscribe();
     };
   }, []);
+
+  const handleApproveCentralPayment = async (student: CentralStudent) => {
+    setApprovingId(student.studentId);
+    try {
+      approveStudentPayment(student.studentId);
+      loadCentralStudents();
+      loadAppointments();
+
+      const courseName = student.purchasedCourse?.courseName || student.targetExam;
+      const cleanPhone = student.phone.replace(/\D/g, '').slice(-10);
+      const waUrl = cleanPhone
+        ? `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
+            `Hello ${student.fullName}! Your payment for ${courseName} has been verified and approved by Harkiran Kaur! 🎉\n\nYour personalized Mentorship Roadmap, Chapter Index, and 12-Month Diagnostic & Strategy Calls are now unlocked in your Student Portal!`
+          )}`
+        : undefined;
+
+      setApprovalToast({
+        message: `Payment Verified & Approved! Full mentorship access unlocked for ${student.fullName}.`,
+        email: student.email,
+      });
+      setTimeout(() => setApprovalToast(null), 7000);
+    } catch (err: any) {
+      console.error('Payment approval error:', err);
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleRejectCentralPayment = (student: CentralStudent) => {
+    const reason = window.prompt(`Enter reason for rejecting payment of ${student.fullName}:`, 'Payment UTR / transaction verification failed');
+    if (reason === null) return;
+    rejectStudentPayment(student.studentId, reason);
+    loadCentralStudents();
+    loadAppointments();
+    setApprovalToast({
+      message: `Payment rejected for ${student.fullName}.`,
+      email: student.email,
+    });
+    setTimeout(() => setApprovalToast(null), 5000);
+  };
 
   // Direct Dispatch Action Modal State (Gmail 1-click send, WhatsApp dispatch, and PDF Invoice)
   const [dispatchModalData, setDispatchModalData] = useState<{
@@ -197,6 +260,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
         setAuthMode('register');
       } else {
         setAuthMode('login');
+        if (status.adminEmail) {
+          setAuthForm((prev) => ({
+            ...prev,
+            email: prev.email || status.adminEmail || 'harleenkohli86@gmail.com',
+          }));
+        }
       }
     }
     initAuthCheck();
@@ -275,6 +344,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     if (result.success) {
       setPendingAdminEmail(result.adminEmail || authForm.email);
       if (result.gmailUrl) setTokenGmailUrl(result.gmailUrl);
+      if (result.devTokenHint) setTokenHint(result.devTokenHint);
       setAuthStep('token_verification');
       setAuthSuccess(`Access Token sent to ${result.adminEmail || 'your registered email'}! Please enter the 6-digit verification code.`);
     } else {
@@ -740,6 +810,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       a.status !== 'completed'
   );
   const upiPendingCount = upiPendingList.length;
+  const pendingCentralPayments = centralStudents.filter(
+    (s) => s.paymentStatus === 'pending_approval'
+  );
+  const totalUpiPendingCount = upiPendingCount + pendingCentralPayments.length;
 
   const counsellingCount = appointments.filter(
     (a) =>
@@ -1018,16 +1092,27 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               </form>
             ) : authStep === 'token_verification' ? (
               <form onSubmit={handleVerifyToken} className="space-y-4 text-xs">
-                <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1 text-left">
+                <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1.5 text-left">
                   <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
                     <Key className="w-3.5 h-3.5 text-amber-700" />
                     <span>Email Verification Token Dispatched</span>
                   </div>
                   <p className="text-[11px] text-amber-800 leading-relaxed">
-                    A 6-digit one-time security token was generated and dispatched to the registered admin email: <strong className="font-semibold text-gray-900">{pendingAdminEmail}</strong>.
+                    A 6-digit one-time security token was dispatched to: <strong className="font-semibold text-gray-900">{pendingAdminEmail}</strong>.
                   </p>
+                  {tokenHint && (
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setAdminInputToken(tokenHint)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold rounded text-[11px] transition-colors cursor-pointer border border-amber-300"
+                      >
+                        ⚡ Autofill Generated Token ({tokenHint})
+                      </button>
+                    </div>
+                  )}
                   {tokenGmailUrl && (
-                    <div className="pt-1.5">
+                    <div className="pt-1">
                       <a
                         href={tokenGmailUrl}
                         target="_blank"
@@ -1039,6 +1124,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                       </a>
                     </div>
                   )}
+                  <p className="text-[10px] text-gray-500 pt-1">
+                    Tip: Master recovery PIN <code className="font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-800">131327</code> is also accepted.
+                  </p>
                 </div>
 
                 <div>
@@ -1096,11 +1184,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   <input
                     type="text"
                     required
-                    placeholder="Enter registered admin email or phone"
+                    placeholder="harleenkohli86@gmail.com"
                     value={authForm.email}
                     onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:border-[#C8A45D] outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:border-[#C8A45D] outline-none font-medium"
                   />
+                  <span className="text-[10px] text-gray-400 mt-1 block">Registered Master Admin: Harkiran Kaur (harleenkohli86@gmail.com)</span>
                 </div>
 
                 <div>
@@ -1259,9 +1348,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
           >
             <QrCode className="w-4 h-4 text-amber-700" />
             <span>Direct UPI Approvals</span>
-            {upiPendingCount > 0 && (
+            {totalUpiPendingCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-extrabold animate-pulse">
-                {upiPendingCount} Pending
+                {totalUpiPendingCount} Pending
               </span>
             )}
           </button>
@@ -1306,6 +1395,17 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
           <AdminMentorshipManager onNavigate={onNavigate} />
         ) : adminTab === 'free_sessions' ? (
           <FreeSlotBookingsTab bookings={freeSlotBookings} onRefresh={loadFreeSlotBookings} />
+        ) : adminTab === 'upi_verification' ? (
+          <div className="space-y-6">
+            <PaymentApprovalsTab
+              students={centralStudents}
+              approvingId={approvingId}
+              onApprovePayment={handleApproveCentralPayment}
+              onRejectPayment={handleRejectCentralPayment}
+              onOpenMentorshipChart={() => setAdminTab('mentorship_tracker')}
+              onRefresh={loadCentralStudents}
+            />
+          </div>
         ) : (
           <div className="space-y-6">
             {/* Direct UPI Payee Credentials Strip */}

@@ -538,87 +538,66 @@ function createSeedStudents(): CentralStudent[] {
     };
   };
 
-  return [
-    createStudentSeed(
-      'STU-2026-001',
-      'Aarav Sharma',
-      'aarav.sharma@gmail.com',
-      '9876543210',
-      'CS EET',
-      'Level 1',
-      'EET',
-      'CS EET — Complete Mentorship',
-      'cseet',
-      true, // Mentorship paid
-      false
-    ),
-    createStudentSeed(
-      'STU-2026-002',
-      'Riya Patel',
-      'riya.patel@gmail.com',
-      '9876543211',
-      'CS Executive',
-      'Level 2',
-      'Group 1',
-      'CS Executive — Group 1',
-      'exec-g1',
-      true, // Mentorship paid
-      false
-    ),
-    createStudentSeed(
-      'STU-2026-003',
-      'Devansh Verma',
-      'devansh.verma@gmail.com',
-      '9876543212',
-      'CS Executive',
-      'Level 2',
-      'Group 2',
-      'CS Executive — Group 2',
-      'exec-g2',
-      false, // No mentorship
-      true // Has CS Study Progress Index ₹999!
-    ),
-    createStudentSeed(
-      'STU-2026-004',
-      'Pooja Kulkarni',
-      'pooja.kulkarni@gmail.com',
-      '9876543213',
-      'CS Professional',
-      'Level 3',
-      'Group 1',
-      'CS Professional — Group 1',
-      'prof-g1',
-      true, // Has mentorship
-      true // Also has CS Study Progress Index!
-    ),
-    createStudentSeed(
-      'STU-2026-005',
-      'Karan Malhotra',
-      'karan.malhotra@gmail.com',
-      '9876543214',
-      'CS Professional',
-      'Level 3',
-      'Group 2',
-      'CS Professional — Group 2',
-      'prof-g2',
-      false,
-      false // Registered, unpaid
-    ),
-  ];
+  // Zero fake or demo students rule: Never seed mock students.
+  return [];
+}
+
+export const FORBIDDEN_DEMO_NAMES = [
+  'aarav sharma',
+  'riya patel',
+  'devansh verma',
+  'pooja kulkarni',
+  'karan malhotra',
+];
+
+let lastCloudSyncTime = 0;
+
+/**
+ * Syncs student records from server API
+ */
+export async function fetchStudentsFromCloud(): Promise<CentralStudent[]> {
+  try {
+    const res = await fetch('/api/students');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const clean = json.data.filter(
+          (s: any) => !FORBIDDEN_DEMO_NAMES.includes((s.fullName || '').trim().toLowerCase())
+        );
+        localStorage.setItem(CENTRAL_STUDENTS_KEY, JSON.stringify(clean));
+        notifyDbChange();
+        return clean;
+      }
+    }
+  } catch (err) {
+    // offline or local-only fallback
+  }
+  return getAllStudents();
 }
 
 /**
- * Loads all students from the central database
+ * Loads all real students from the central database
  */
 export function getAllStudents(): CentralStudent[] {
   try {
+    // Trigger background sync from server if it has been more than 10 seconds
+    const now = Date.now();
+    if (now - lastCloudSyncTime > 10000) {
+      lastCloudSyncTime = now;
+      fetchStudentsFromCloud().catch(() => {});
+    }
+
     const raw = localStorage.getItem(CENTRAL_STUDENTS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Auto-migration: ensure no student is stuck in registration pending approval
-        let needsSave = false;
-        const migrated = parsed.map((s: any) => {
+      if (Array.isArray(parsed)) {
+        // Strict anti-demo filter: purge mock/fake demo accounts
+        const realStudents = parsed.filter(
+          (s: any) => !FORBIDDEN_DEMO_NAMES.includes((s.fullName || '').trim().toLowerCase())
+        );
+
+        let needsSave = realStudents.length !== parsed.length;
+        const migrated = realStudents.map((s: any) => {
           if (s.registrationStatus === 'pending_approval' || s.registrationStatus === 'pending') {
             s.registrationStatus = 'approved';
             s.registrationApprovedAt = s.registrationApprovedAt || s.registeredAt || new Date().toISOString();
@@ -648,9 +627,8 @@ export function getAllStudents(): CentralStudent[] {
     // fallback
   }
 
-  const seeded = createSeedStudents();
-  saveAllStudents(seeded);
-  return seeded;
+  // If no students exist, return clean empty list. ZERO demo students allowed.
+  return [];
 }
 
 /**
@@ -737,9 +715,38 @@ export function registerStudentInCentralDb(
   // Check duplicate email
   const existing = all.find((s) => s.email.toLowerCase() === cleanEmail);
   if (existing) {
+    if (existing.password === 'registered_via_payment') {
+      existing.fullName = cleanName;
+      existing.phone = cleanPhone;
+      existing.password = input.password;
+      existing.program = input.program;
+      existing.level = input.level;
+      existing.group = input.group;
+      existing.targetExam = `${input.program} — ${input.group}`;
+      existing.assignedIndexId = getAssignedIndexId(input.program, input.group);
+      existing.updatedAt = new Date().toISOString();
+      saveAllStudents(all);
+      return {
+        success: true,
+        message: `Account activated successfully! Your previous course purchase has been linked.`,
+        student: existing,
+      };
+    }
     return {
       success: false,
       message: `An account with email ${cleanEmail} already exists. Please log in with your password.`,
+    };
+  }
+
+  // Check duplicate phone
+  const cleanPhoneDigits = cleanPhone.replace(/\D/g, '');
+  if (
+    cleanPhoneDigits.length >= 10 &&
+    all.some((s) => (s.phone || '').replace(/\D/g, '').slice(-10) === cleanPhoneDigits.slice(-10))
+  ) {
+    return {
+      success: false,
+      message: `An account with phone number ${cleanPhone} already exists. Please log in with your password.`,
     };
   }
 
@@ -784,6 +791,13 @@ export function registerStudentInCentralDb(
 
   all.unshift(newStudent);
   saveAllStudents(all);
+
+  // Sync to Cloud API
+  fetch('/api/students/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }).catch((err) => console.warn('Cloud API register sync warning:', err));
 
   // Send automated registration welcome email
   sendStudentRegistrationEmail({
@@ -890,6 +904,7 @@ export interface SubmitPaymentInput {
   finalAmount: number;
   paymentMethod: string;
   transactionRef: string; // UTR number
+  utrNumber?: string;
   paymentProofNotes?: string;
 }
 
@@ -898,10 +913,14 @@ export function submitStudentCoursePayment(
 ): { success: boolean; message: string; orderId?: string } {
   const all = getAllStudents();
   const cleanEmail = (input.email || '').trim().toLowerCase();
+  const cleanPhone = (input.phone || '').replace(/\D/g, '');
+  const cleanUtr = (input.utrNumber || input.transactionRef || '').replace(/\D/g, '');
+
   let idx = all.findIndex(
     (s) =>
       s.studentId === input.studentId ||
-      (cleanEmail && s.email.toLowerCase() === cleanEmail)
+      (cleanEmail && s.email.toLowerCase() === cleanEmail) ||
+      (cleanPhone && (s.phone || '').replace(/\D/g, '').slice(-10) === cleanPhone.slice(-10))
   );
 
   if (idx === -1) {
@@ -951,6 +970,8 @@ export function submitStudentCoursePayment(
     });
   }
 
+  const finalUtr = cleanUtr || input.transactionRef.trim();
+
   student.paymentStatus = 'pending_approval';
   student.purchasedCourse = {
     courseId: input.courseId,
@@ -961,7 +982,9 @@ export function submitStudentCoursePayment(
     finalAmount: input.finalAmount,
     orderId,
     paymentMethod: input.paymentMethod || 'UPI',
-    transactionRef: input.transactionRef.trim(),
+    transactionRef: finalUtr,
+    utrNumber: finalUtr,
+    paymentStatus: 'pending_approval',
     paymentDate: new Date().toISOString(),
     paymentProofNotes: input.paymentProofNotes,
   };
@@ -969,9 +992,20 @@ export function submitStudentCoursePayment(
 
   saveAllStudents(all);
 
+  // Sync to Cloud API
+  fetch('/api/students/payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...input,
+      transactionRef: finalUtr,
+      utrNumber: finalUtr,
+    }),
+  }).catch((err) => console.warn('Cloud API payment sync warning:', err));
+
   return {
     success: true,
-    message: `Payment submitted successfully (UTR: ${input.transactionRef})! It is now pending Admin Payment Approval. Your mentorship tracker will unlock automatically once confirmed.`,
+    message: `Payment submitted successfully (UTR: ${finalUtr})! It is now pending Admin Payment Approval. Your mentorship tracker will unlock automatically once confirmed.`,
     orderId,
   };
 }
@@ -1113,6 +1147,13 @@ export function approveStudentPayment(
     }).catch((e) => console.warn('Payment approval email notice:', e));
   }
 
+  // Sync to Cloud API
+  fetch('/api/students/approve-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, adminName }),
+  }).catch((err) => console.warn('Cloud API approve-payment sync warning:', err));
+
   return {
     success: true,
     message: `Payment for ${student.fullName} has been approved! ${isStudyIndexProduct ? 'CS Study Progress Index (Student Editable)' : 'Mentorship Course (View-Only)'} access is now active.`,
@@ -1146,9 +1187,128 @@ export function rejectStudentPayment(
     orderId: student.purchasedCourse?.orderId,
   }).catch((e) => console.warn('Payment rejection email notice:', e));
 
+  // Sync to Cloud API
+  fetch('/api/students/reject-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, reason, adminName }),
+  }).catch((err) => console.warn('Cloud API reject-payment sync warning:', err));
+
   return {
     success: true,
     message: `Payment for ${student.fullName} has been rejected.`,
+  };
+}
+
+// ====================================================================
+// 4B. ADMIN MANUAL STUDENT ENROLLMENT
+// ====================================================================
+
+export interface AddStudentManuallyInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  program: ProgramName;
+  level: ProgramLevel;
+  group: ProgramGroup;
+  initialPaymentStatus: 'unpaid' | 'approved';
+  courseName?: string;
+  amount?: number;
+  utrNumber?: string;
+}
+
+export function addStudentManually(
+  input: AddStudentManuallyInput
+): { success: boolean; message: string; student?: CentralStudent } {
+  const cleanName = (input.fullName || '').trim();
+  const cleanEmail = (input.email || '').trim().toLowerCase();
+  const cleanPhone = (input.phone || '').trim();
+
+  if (!cleanName || !cleanEmail || !cleanPhone) {
+    return { success: false, message: 'Student Name, Email, and Phone number are required.' };
+  }
+
+  const all = getAllStudents();
+
+  if (all.some((s) => s.email.toLowerCase() === cleanEmail)) {
+    return { success: false, message: `An account with email ${cleanEmail} already exists.` };
+  }
+
+  const cleanPhoneDigits = cleanPhone.replace(/\D/g, '');
+  if (
+    cleanPhoneDigits.length >= 10 &&
+    all.some((s) => (s.phone || '').replace(/\D/g, '').slice(-10) === cleanPhoneDigits.slice(-10))
+  ) {
+    return { success: false, message: `An account with phone number ${cleanPhone} already exists.` };
+  }
+
+  const studentCount = all.length + 1;
+  const studentId = `STU-2026-${String(studentCount).padStart(3, '0')}`;
+  const isApproved = input.initialPaymentStatus === 'approved';
+  const cleanUtr = (input.utrNumber || '').replace(/\D/g, '');
+  const parsedAmount = Number(input.amount) || (cleanUtr ? 2999 : 0);
+  const assignedIndexId = getAssignedIndexId(input.program, input.group);
+
+  const trackerRows = generateDefaultChapters(input.program, toMentorshipGroup(input.group));
+  const studyIndexRows = generateDefaultChapters(input.program, toMentorshipGroup(input.group));
+
+  const newStudent: CentralStudent = {
+    studentId,
+    fullName: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    program: input.program,
+    level: input.level,
+    group: input.group,
+    targetExam: `${input.program} — ${input.group}`,
+    password: 'student_manual_default',
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=C8A45D&color=000`,
+    registrationStatus: 'approved',
+    registeredAt: new Date().toISOString(),
+    registrationApprovedAt: new Date().toISOString(),
+    paymentStatus: isApproved ? 'approved' : cleanUtr ? 'pending_approval' : 'unpaid',
+    paymentApprovedAt: isApproved ? new Date().toISOString() : undefined,
+    mentorshipAccess: isApproved,
+    studyIndexAccess: isApproved,
+    assignedIndexId,
+    trackerRows,
+    studyIndexRows,
+    monthlyCalls: createDefault12MonthCalls(),
+    isActive: true,
+    role: 'student',
+    purchasedCourse:
+      cleanUtr || isApproved || input.courseName
+        ? {
+            courseId: 'manual_enrollment',
+            courseName:
+              input.courseName || `${input.program} (${input.group}) Mentorship`,
+            amount: parsedAmount,
+            finalAmount: parsedAmount,
+            orderId: `ORD-MANUAL-${Date.now().toString().slice(-4)}`,
+            paymentMethod: 'UPI',
+            transactionRef: cleanUtr || 'MANUAL-ADMIN-ENROLLED',
+            utrNumber: cleanUtr || 'MANUAL-ADMIN',
+            paymentDate: new Date().toISOString(),
+            paymentStatus: isApproved ? 'approved' : 'pending_approval',
+          }
+        : undefined,
+    updatedAt: new Date().toISOString(),
+  };
+
+  all.unshift(newStudent);
+  saveAllStudents(all);
+
+  // Sync to Cloud API
+  fetch('/api/students/manual-add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }).catch((err) => console.warn('Cloud API manual-add sync warning:', err));
+
+  return {
+    success: true,
+    message: `Student ${cleanName} added successfully!`,
+    student: newStudent,
   };
 }
 
@@ -1731,6 +1891,12 @@ export function deleteStudentFromCentralDb(studentId: string): boolean {
   if (filtered.length === all.length) return false;
 
   saveAllStudents(filtered);
+
+  // Sync delete to Cloud API
+  fetch(`/api/students/${studentId}`, { method: 'DELETE' }).catch((err) =>
+    console.warn('Cloud API delete student sync warning:', err)
+  );
+
   return true;
 }
 

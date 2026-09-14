@@ -1,22 +1,22 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { createServer as createViteServer } from 'vite';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(express.json());
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'central_students.json');
 
+// Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
+
+// Ensure students file exists
 if (!fs.existsSync(STUDENTS_FILE)) {
   fs.writeFileSync(STUDENTS_FILE, JSON.stringify([], null, 2), 'utf8');
 }
@@ -29,11 +29,12 @@ const FORBIDDEN_DEMO_NAMES = [
   'karan malhotra'
 ];
 
-function readStudents() {
+function readStudents(): any[] {
   try {
     const raw = fs.readFileSync(STUDENTS_FILE, 'utf8');
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
+      // Strictly filter out any mock/seed students
       return parsed.filter(
         (s) => !FORBIDDEN_DEMO_NAMES.includes((s.fullName || '').trim().toLowerCase())
       );
@@ -45,7 +46,7 @@ function readStudents() {
   }
 }
 
-function writeStudents(students) {
+function writeStudents(students: any[]): boolean {
   try {
     const clean = students.filter(
       (s) => !FORBIDDEN_DEMO_NAMES.includes((s.fullName || '').trim().toLowerCase())
@@ -57,6 +58,10 @@ function writeStudents(students) {
     return false;
   }
 }
+
+// -------------------------------------------------------------
+// API Endpoints
+// -------------------------------------------------------------
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -86,14 +91,17 @@ app.post('/api/students/register', (req, res) => {
 
   const students = readStudents();
 
-  if (students.some((s) => s.email?.toLowerCase() === cleanEmail)) {
+  // Duplicate checks
+  const existingEmail = students.find((s) => s.email?.toLowerCase() === cleanEmail);
+  if (existingEmail) {
     return res.status(409).json({
       success: false,
       message: `An account with email ${cleanEmail} already exists. Please log in with your password.`,
     });
   }
 
-  if (students.some((s) => (s.phone || '').replace(/\D/g, '').slice(-10) === cleanPhone.slice(-10))) {
+  const existingPhone = students.find((s) => (s.phone || '').replace(/\D/g, '').slice(-10) === cleanPhone.slice(-10));
+  if (existingPhone) {
     return res.status(409).json({
       success: false,
       message: `An account with phone number ${cleanPhone} already exists. Please log in with your password.`,
@@ -185,6 +193,7 @@ app.post('/api/students/payment', (req, res) => {
   const orderId = `ORD-2026-${Date.now().toString().slice(-5)}`;
 
   if (idx === -1) {
+    // Create student if not yet registered
     const studentCount = students.length + 1;
     const generatedId = studentId || `STU-2026-${String(studentCount).padStart(3, '0')}`;
     const newStudent = {
@@ -267,7 +276,7 @@ app.post('/api/students/payment', (req, res) => {
   });
 });
 
-// POST approve payment
+// POST approve student payment (Admin)
 app.post('/api/students/approve-payment', (req, res) => {
   const { studentId, adminName = 'Harkiran Kaur' } = req.body;
   if (!studentId) {
@@ -302,7 +311,7 @@ app.post('/api/students/approve-payment', (req, res) => {
   });
 });
 
-// POST reject payment
+// POST reject student payment (Admin)
 app.post('/api/students/reject-payment', (req, res) => {
   const { studentId, reason = 'Payment UTR could not be verified in bank records.' } = req.body;
   if (!studentId) {
@@ -336,7 +345,7 @@ app.post('/api/students/reject-payment', (req, res) => {
   });
 });
 
-// POST manually add student
+// POST manually add student (Admin)
 app.post('/api/students/manual-add', (req, res) => {
   const {
     fullName,
@@ -364,6 +373,7 @@ app.post('/api/students/manual-add', (req, res) => {
 
   const students = readStudents();
 
+  // Duplicate checks
   if (students.some((s) => s.email?.toLowerCase() === cleanEmail)) {
     return res.status(409).json({
       success: false,
@@ -436,7 +446,7 @@ app.post('/api/students/manual-add', (req, res) => {
   });
 });
 
-// DELETE student
+// DELETE student (Admin)
 app.delete('/api/students/:id', (req, res) => {
   const { id } = req.params;
   let students = readStudents();
@@ -453,13 +463,27 @@ app.delete('/api/students/:id', (req, res) => {
   return res.json({ success: true, message: 'Student removed successfully.' });
 });
 
-// Serve static assets in production
-const distPath = path.join(process.cwd(), 'dist');
-app.use(express.static(distPath));
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
+// -------------------------------------------------------------
+// Vite Middleware / Static Asset Serving
+// -------------------------------------------------------------
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();

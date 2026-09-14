@@ -622,40 +622,17 @@ export function getAllStudentProfilesForAdmin(): StudentMentorshipProfile[] {
     // ignore
   }
 
-  // Seed default students if completely clean and no deletions have occurred
-  if (result.length === 0 && deletedKeys.length === 0) {
-    const demo1 = getOrCreateStudentMentorship({
-      fullName: 'Aarav Sharma',
-      email: 'aarav.sharma@gmail.com',
-      phone: '9876543210',
-      targetExam: 'CS Executive Group 1',
-      isApproved: true,
-    });
-    const demo2 = getOrCreateStudentMentorship({
-      fullName: 'Riya Patel',
-      email: 'riya.patel@gmail.com',
-      phone: '9812345678',
-      targetExam: 'CS Executive Group 2',
-      isApproved: true,
-    });
-    const demo3 = getOrCreateStudentMentorship({
-      fullName: 'Devansh Verma',
-      email: 'devansh.verma@gmail.com',
-      phone: '9988776655',
-      targetExam: 'CS Professional Group 1',
-      isApproved: true,
-    });
-    const demo4 = getOrCreateStudentMentorship({
-      fullName: 'Pooja Kulkarni',
-      email: 'pooja.kulkarni@gmail.com',
-      phone: '9765432109',
-      targetExam: 'CS EET',
-      isApproved: true,
-    });
-    result.push(demo1, demo2, demo3, demo4);
-  }
+  const FORBIDDEN_DEMO_NAMES = [
+    'aarav sharma',
+    'riya patel',
+    'devansh verma',
+    'pooja kulkarni',
+    'karan malhotra'
+  ];
 
-  return result.filter((p) => !isDeleted(p));
+  return result
+    .filter((p) => !isDeleted(p))
+    .filter((p) => !FORBIDDEN_DEMO_NAMES.includes((p.studentName || '').trim().toLowerCase()));
 }
 
 export const getAllStudentMentorshipProfiles = getAllStudentProfilesForAdmin;

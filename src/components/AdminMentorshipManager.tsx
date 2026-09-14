@@ -48,6 +48,7 @@ import {
 } from '../services/centralStudentDatabase';
 import { RegistrationApprovalsTab } from './admin/RegistrationApprovalsTab';
 import { PaymentApprovalsTab } from './admin/PaymentApprovalsTab';
+import { RegisteredStudentsListTab } from './admin/RegisteredStudentsListTab';
 import { DiscountCodesTab } from './admin/DiscountCodesTab';
 import { SyllabusIndexTab } from './admin/SyllabusIndexTab';
 import { SlotBookingsTab } from './admin/SlotBookingsTab';
@@ -111,8 +112,8 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
   const [activeStudent, setActiveStudent] = useState<StudentMentorshipProfile | null>(null);
   const [managingStudent, setManagingStudent] = useState<CentralStudent | null>(null);
   const [managerTab, setManagerTab] = useState<
-    'registrations' | 'payments' | 'free_slot_bookings' | 'directory' | 'chart' | 'syllabus_index' | 'discount_codes'
-  >('registrations');
+    'students_list' | 'registrations' | 'payments' | 'free_slot_bookings' | 'directory' | 'chart' | 'syllabus_index' | 'discount_codes'
+  >('students_list');
   const [searchQuery, setSearchQuery] = useState('');
   const [directoryType, setDirectoryType] = useState<'mentorship' | 'self_paced'>('mentorship');
   const [groupFilter, setGroupFilter] = useState<string>('all');
@@ -980,18 +981,18 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
       <div className="bg-white border-2 border-[#C8A45D]/40 p-2 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
-            onClick={() => setManagerTab('free_slot_bookings')}
+            onClick={() => setManagerTab('students_list')}
             className={`py-2 px-3 rounded-xl text-xs font-montserrat font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              managerTab === 'free_slot_bookings'
-                ? 'bg-[#1C1917] text-[#FFE3A0] border border-[#C8A45D] shadow-sm'
+              managerTab === 'students_list'
+                ? 'gold-gradient-bg text-black shadow-sm font-bold'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <PhoneCall className="w-3.5 h-3.5 text-emerald-500" />
-            <span>📞 Free Session Bookings</span>
-            {pendingFreeSlotBookingsCount > 0 && (
-              <span className="px-1.5 py-0.2 bg-emerald-500 text-white text-[10px] font-bold rounded-full animate-pulse">
-                {pendingFreeSlotBookingsCount}
+            <User className="w-3.5 h-3.5" />
+            <span>👥 Registered Students ({centralStudents.length})</span>
+            {pendingPaymentsCount > 0 && (
+              <span className="px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-bold rounded-full animate-pulse">
+                {pendingPaymentsCount} Pending
               </span>
             )}
           </button>
@@ -1096,6 +1097,15 @@ export const AdminMentorshipManager: React.FC<AdminMentorshipManagerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* TAB 0: REGISTERED STUDENTS LIST */}
+      {managerTab === 'students_list' && (
+        <RegisteredStudentsListTab
+          students={centralStudents}
+          onRefresh={loadCentralData}
+          onOpenMentorshipChart={handleOpenMentorshipChartForCentralStudent}
+        />
+      )}
 
       {/* TAB: FREE SESSION BOOKINGS */}
       {managerTab === 'free_slot_bookings' && (

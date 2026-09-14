@@ -55,6 +55,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [isAnswersheetModalOpen, setIsAnswersheetModalOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<'june2027' | 'current'>('june2027');
 
   const { addToCart, buyNow } = useCart();
   const { hasPurchased } = useAuth();
@@ -363,329 +364,745 @@ export const HomePage: React.FC<HomePageProps> = ({
 
 
       {/* 4. ALL 3 LEVEL PROGRAMS & PRICING SHOWCASE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Section Header & Session Switch */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-montserrat font-bold text-[#C8A45D] uppercase tracking-widest">
-              Mentorship Programs (Strictly 25 Students Per Level)
+            <span className="text-xs font-montserrat font-bold text-[#8A651E] uppercase tracking-widest block">
+              1-on-1 Mentorship Programs (Strictly 25 Students Per Level)
             </span>
             <h2 className="font-cinzel text-3xl font-bold text-[#0F0F0F] mt-1">
-              Select Your Target Exam Level & Hall Blueprint
+              Select Your Target Examination Session &amp; Level
             </h2>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">
-              1st 10 got their offers! Next offer: 5% OFF with code: <strong>NEXT5</strong>
+              2027 Launch Codes: <strong className="text-emerald-900 font-mono">FEB2027</strong> (CSEET) &bull; <strong className="text-emerald-900 font-mono">JUNE2027</strong> (Exec &amp; Prof)
             </span>
           </div>
         </div>
 
+        {/* High-Visibility Session Switch Tabs */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-[#FAF8F5] border-2 border-[#C8A45D]/60 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setSelectedSession('june2027')}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-montserrat font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                selectedSession === 'june2027'
+                  ? 'bg-gradient-to-r from-[#1C1917] via-[#2A241A] to-[#1C1917] text-[#FFE3A0] shadow-md border border-[#C8A45D]'
+                  : 'text-gray-700 hover:text-black hover:bg-white/80'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#FFE3A0] fill-[#FFE3A0]" />
+              <span>2027 Sessions (Feb &amp; June Launch Offer)</span>
+              <span className="px-1.5 py-0.2 bg-[#C8A45D] text-black text-[9px] font-black rounded uppercase">7 New</span>
+            </button>
+            <button
+              onClick={() => setSelectedSession('current')}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-montserrat font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                selectedSession === 'current'
+                  ? 'bg-gradient-to-r from-[#1C1917] via-[#2A241A] to-[#1C1917] text-[#FFE3A0] shadow-md border border-[#C8A45D]'
+                  : 'text-gray-700 hover:text-black hover:bg-white/80'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#C8A45D]" />
+              <span>Current Session (Oct / Dec 2026)</span>
+            </button>
+          </div>
 
-
-        {/* Primary 4 Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <ProductCard
-            product={getProduct('cseet-mentorship')}
-            onNavigate={onNavigate}
-            badgeLabel="Level 1 • Oct 2026"
-          />
-          <ProductCard
-            product={getProduct('exec-both-mentorship')}
-            onNavigate={onNavigate}
-            badgeLabel="Level 2 • Dec 2026"
-          />
-          <ProductCard
-            product={getProduct('prof-both-mentorship')}
-            onNavigate={onNavigate}
-            badgeLabel="Level 3 • Dec 2026"
-          />
-          <ProductCard
-            product={getProduct('career-counselling-12th')}
-            onNavigate={onNavigate}
-            badgeLabel="Career Roadmap"
-          />
+          <div className="text-right text-xs text-gray-500 font-poppins px-2 hidden md:block">
+            {selectedSession === 'june2027' ? (
+              <span className="text-[#8A651E] font-bold">
+                Early Bird Mentorship Enrolling Now • Direct AIR 3 Guidance
+              </span>
+            ) : (
+              <span>Oct 2026 (CSEET) &amp; Dec 2026 (Exec / Prof)</span>
+            )}
+          </div>
         </div>
+
+        {/* Product Cards Grid */}
+        {selectedSession === 'june2027' ? (
+          <div className="space-y-6">
+            {/* Launch Announcement Banner */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-[#1C1917] via-[#251E16] to-[#12100E] border-2 border-[#C8A45D] rounded-2xl text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFE3A0] to-[#C8A45D] flex items-center justify-center text-black font-extrabold shadow-sm shrink-0">
+                  <Sparkles className="w-5 h-5 text-black fill-black" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-[#C8A45D] text-black text-[10px] font-extrabold uppercase rounded tracking-wider">
+                      OFFICIAL 2027 BATCHES
+                    </span>
+                    <span className="font-cinzel font-bold text-white text-sm sm:text-base">
+                      All 7 Level-Wise Programs Live
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 font-poppins mt-0.5">
+                    CSEET (Feb 2027) &amp; CS Executive / Professional (June 2027). Code <strong className="text-[#FFE3A0] font-mono">FEB2027</strong> or <strong className="text-[#FFE3A0] font-mono">JUNE2027</strong> for 5% OFF!
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => onNavigate('programs')}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-[#FFE3A0] border border-[#C8A45D]/50 rounded-xl text-xs font-montserrat font-bold cursor-pointer transition-colors"
+                >
+                  View Full Directory
+                </button>
+              </div>
+            </div>
+
+            {/* 7 2027 Product Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <ProductCard
+                product={getProduct('june2027-cseet')}
+                onNavigate={onNavigate}
+                badgeLabel="FEB 2027 • CSEET"
+              />
+              <ProductCard
+                product={getProduct('june2027-exec-both')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Exec Both Groups"
+              />
+              <ProductCard
+                product={getProduct('june2027-prof-both')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Prof Both Groups"
+              />
+              <ProductCard
+                product={getProduct('june2027-exec-g1')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Exec Group 1"
+              />
+              <ProductCard
+                product={getProduct('june2027-exec-g2')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Exec Group 2"
+              />
+              <ProductCard
+                product={getProduct('june2027-prof-g1')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Prof Group 1"
+              />
+              <ProductCard
+                product={getProduct('june2027-prof-g2')}
+                onNavigate={onNavigate}
+                badgeLabel="JUNE 2027 • Prof Group 2"
+              />
+              <ProductCard
+                product={getProduct('career-counselling-12th')}
+                onNavigate={onNavigate}
+                badgeLabel="Career Roadmap (Post 12th)"
+              />
+            </div>
+          </div>
+        ) : (
+          /* Primary Current Session Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <ProductCard
+              product={getProduct('cseet-mentorship')}
+              onNavigate={onNavigate}
+              badgeLabel="Level 1 • Oct 2026"
+            />
+            <ProductCard
+              product={getProduct('exec-both-mentorship')}
+              onNavigate={onNavigate}
+              badgeLabel="Level 2 • Dec 2026"
+            />
+            <ProductCard
+              product={getProduct('prof-both-mentorship')}
+              onNavigate={onNavigate}
+              badgeLabel="Level 3 • Dec 2026"
+            />
+            <ProductCard
+              product={getProduct('career-counselling-12th')}
+              onNavigate={onNavigate}
+              badgeLabel="Career Roadmap"
+            />
+          </div>
+        )}
 
         {/* Direct Mentorship Fee Matrix */}
         <div className="mt-8 p-6 sm:p-8 bg-[#0F0F0F] rounded-3xl border border-[#C8A45D]/40 text-white space-y-6 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#C8A45D]/30 pb-4">
             <div>
-              <span className="text-[10px] font-montserrat font-bold text-[#C8A45D] uppercase tracking-widest block">
-                Instant Enrollment Portal
-              </span>
-              <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-white">
-                Direct Stage & Program Directory
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-montserrat font-bold text-[#C8A45D] uppercase tracking-widest block">
+                  Instant Enrollment Portal
+                </span>
+                <span className="px-2 py-0.2 bg-[#C8A45D]/20 text-[#FFE3A0] border border-[#C8A45D]/40 rounded text-[9px] font-extrabold uppercase">
+                  {selectedSession === 'june2027' ? '2027 Sessions Active' : 'Current Session Active'}
+                </span>
+              </div>
+              <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-white mt-0.5">
+                {selectedSession === 'june2027'
+                  ? '2027 Examination Mentorship Directory'
+                  : 'Direct Stage & Program Directory'}
               </h3>
             </div>
             <div className="flex items-center gap-2 bg-[#C8A45D]/10 border border-[#C8A45D]/30 px-3 py-1.5 rounded-xl">
               <Percent className="w-3.5 h-3.5 text-[#FFE3A0]" />
-              <span className="text-xs text-[#FFE3A0] font-poppins font-medium">1st 10 got their offers! Next: Use code <strong className="text-white">NEXT5</strong> for 5% OFF on Mentorship</span>
+              <span className="text-xs text-[#FFE3A0] font-poppins font-medium">
+                {selectedSession === 'june2027' ? (
+                  <>Codes: <strong className="text-white font-mono">FEB2027</strong> (CSEET) &bull; <strong className="text-white font-mono">JUNE2027</strong> (Exec &amp; Prof)</>
+                ) : (
+                  <>Use code <strong className="text-white font-mono">NEXT5</strong> for 5% OFF on Mentorship</>
+                )}
+              </span>
             </div>
           </div>
 
           {/* 3 Main Examination Columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* COLUMN 1: CSEET */}
-            <div className="p-5 bg-[#161616] border border-emerald-500/30 rounded-2xl flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
-                    Level 1 • Oct 2026
-                  </span>
-                  <span className="text-[10px] text-gray-400 font-semibold">1st Call Free Demo</span>
-                </div>
-                <div>
-                  <h4 className="font-cinzel font-bold text-lg text-white">CSEET Mentorship</h4>
-                  <p className="text-xs text-gray-400 font-poppins">Complete ICSI Foundation 4-Paper Mentorship</p>
+          {selectedSession === 'june2027' ? (
+            /* =================== FEBRUARY 2027 COLUMNS =================== */
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* COLUMN 1: CSEET FEBRUARY 2027 */}
+              <div className="p-5 bg-[#161616] border-2 border-emerald-500/40 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      LEVEL 1 • FEBRUARY 2027
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-semibold">Launch Offer</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CSEET Mentorship — FEBRUARY 2027</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Comprehensive Foundation 4-Paper Mentorship</p>
+                  </div>
+
+                  <div className="p-3 bg-black/40 rounded-xl space-y-1.5 text-xs text-gray-300 font-poppins">
+                    <div className="text-[11px] font-bold text-[#C8A45D] uppercase tracking-wider">All 4 Foundation Papers:</div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 1: Business Communication</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 2: Fundamentals of Accounting</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 3: Economics &amp; Business Env.</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 4: Business Laws &amp; Management</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-cinzel text-3xl font-black text-[#FFE3A0]">₹3,000/-</span>
+                      <span className="text-xs text-gray-400 line-through">₹6,000</span>
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/15 px-1.5 py-0.5 rounded">50% OFF</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400">Target February 2027 examination with AIR 3 Harkiran Kaur.</p>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-black/40 rounded-xl space-y-1.5 text-xs text-gray-300 font-poppins">
-                  <div className="text-[11px] font-bold text-[#C8A45D] uppercase tracking-wider">Subjects Covered:</div>
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Paper 1: Business Communication</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Paper 2: Fundamentals of Accounting</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Paper 3: Economics & Business Env.</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Paper 4: Business Laws & Management</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-cinzel text-3xl font-black text-[#FFE3A0]">₹1,199/-</span>
-                    <span className="text-xs text-gray-400 line-through">₹2,000</span>
-                  </div>
-                  <p className="text-[10px] text-gray-400">Includes daily study timetable, doubt solving & routine check-ins.</p>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                  <button
+                    onClick={() => addToCart(getProduct('june2027-cseet'))}
+                    className="py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-montserrat font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#C8A45D]" />
+                    <span>Add to Cart</span>
+                  </button>
+                  <button
+                    onClick={() => buyNow(getProduct('june2027-cseet'))}
+                    className="py-2.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-montserrat font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 uppercase cursor-pointer hover:brightness-110 shadow-md transition-all"
+                  >
+                    <span>Instant Buy</span>
+                    <Zap className="w-3.5 h-3.5 fill-black" />
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
-                <button
-                  onClick={() => addToCart(getProduct('cseet-mentorship'))}
-                  className="py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-montserrat font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                >
-                  <ShoppingBag className="w-3.5 h-3.5 text-[#C8A45D]" />
-                  <span>Add to Cart</span>
-                </button>
-                <button
-                  onClick={() => buyNow(getProduct('cseet-mentorship'))}
-                  className="py-2.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-montserrat font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 uppercase cursor-pointer hover:brightness-110 shadow-md transition-all"
-                >
-                  <span>Instant Buy</span>
-                  <Zap className="w-3.5 h-3.5 fill-black" />
-                </button>
-              </div>
-            </div>
-
-            {/* COLUMN 2: CS EXECUTIVE (Group 1, Group 2, Both Groups) */}
-            <div className="p-5 bg-[#161616] border border-amber-500/30 rounded-2xl flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
-                    Level 2 • Dec 2026
-                  </span>
-                  <span className="text-[10px] text-[#FFE3A0] font-semibold">Dec '26 Exam Attempt</span>
-                </div>
-                <div>
-                  <h4 className="font-cinzel font-bold text-lg text-white">CS Executive Mentorship</h4>
-                  <p className="text-xs text-gray-400 font-poppins">Choose your specific group or enroll for both</p>
-                </div>
-
-                {/* Sub-options in Executive */}
-                <div className="space-y-2.5">
-                  {/* Exec Group 1 */}
-                  <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">Group 1 (4 Subjects)</span>
-                      <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,999/-</span>
-                    </div>
-                    <p className="text-[10.5px] text-gray-400 leading-tight">
-                      JIGL, Company Law, SBLL, CAFM
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('exec-g1-mentorship'))}
-                        className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('exec-g1-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy G1</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
-                    </div>
+              {/* COLUMN 2: CS EXECUTIVE JUNE 2027 (G1, G2, Both) */}
+              <div className="p-5 bg-[#161616] border-2 border-amber-500/40 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      LEVEL 2 • JUNE 2027
+                    </span>
+                    <span className="text-[10px] text-[#FFE3A0] font-semibold">June '27 CS Exam</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CS Executive — JUNE 2027</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Specialized 1-on-1 mentorship for June 2027</p>
                   </div>
 
-                  {/* Exec Group 2 */}
-                  <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">Group 2 (3 Subjects)</span>
-                      <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,699/-</span>
-                    </div>
-                    <p className="text-[10.5px] text-gray-400 leading-tight">
-                      CMSL, ECIPL, Tax Laws & Practice
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('exec-g2-mentorship'))}
-                        className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('exec-g2-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy G2</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Exec Both Groups */}
-                  <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-2 relative">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-[#FFE3A0]">Both Groups (Whole)</span>
-                        <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">Save ₹449</span>
+                  {/* Sub-options for Exec June 2027 */}
+                  <div className="space-y-2.5">
+                    {/* Exec Group 1 June 2027 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 1 — JUNE 2027</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹6,999</span>
+                          <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹3,099/-</span>
+                        </div>
                       </div>
-                      <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹3,249/-</span>
-                    </div>
-                    <p className="text-[10.5px] text-gray-300 leading-tight">
-                      Complete 7-Paper Dual Group Mastery & Mock Plan
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('exec-both-mentorship'))}
-                        className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('exec-both-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy Both</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* COLUMN 3: CS PROFESSIONAL (Group 1, Group 2, Both Groups) */}
-            <div className="p-5 bg-[#161616] border border-purple-500/30 rounded-2xl flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
-                    Level 3 • AIR 3 Flagship
-                  </span>
-                  <span className="text-[10px] text-[#FFE3A0] font-semibold">Dec '26 Attempt</span>
-                </div>
-                <div>
-                  <h4 className="font-cinzel font-bold text-lg text-white">CS Professional Mentorship</h4>
-                  <p className="text-xs text-gray-400 font-poppins">Direct mentorship by AIR 3 Harkiran Kaur</p>
-                </div>
-
-                {/* Sub-options in Professional */}
-                <div className="space-y-2.5">
-                  {/* Prof Group 1 */}
-                  <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">Group 1 (4 Subjects)</span>
-                      <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹2,499/-</span>
-                    </div>
-                    <p className="text-[10.5px] text-gray-400 leading-tight">
-                      ESG, Drafting & Pleadings, Compliance & Audit, Elective 1
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('prof-g1-mentorship'))}
-                        className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('prof-g1-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy G1</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Prof Group 2 */}
-                  <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">Group 2 (3 Subjects)</span>
-                      <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,999/-</span>
-                    </div>
-                    <p className="text-[10.5px] text-gray-400 leading-tight">
-                      Strategic Management, Restructuring & IBC, Elective 2
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('prof-g2-mentorship'))}
-                        className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('prof-g2-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy G2</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Prof Both Groups */}
-                  <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-2 relative">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-[#FFE3A0]">Both Groups (Whole)</span>
-                        <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">AIR 3 Elite</span>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        JIGL, Company Law, SBLL, CAFM (All 4 Papers)
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-exec-g1'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-exec-g1'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G1</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
                       </div>
-                      <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹3,999/-</span>
                     </div>
-                    <p className="text-[10.5px] text-gray-300 leading-tight">
-                      All 7 Papers direct mentorship with AIR 3 Ranker
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart(getProduct('prof-both-mentorship'))}
-                        className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
-                      </button>
-                      <button
-                        onClick={() => buyNow(getProduct('prof-both-mentorship'))}
-                        className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <span>Buy Both</span>
-                        <Zap className="w-3 h-3 fill-black" />
-                      </button>
+
+                    {/* Exec Group 2 June 2027 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 2 — JUNE 2027</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹6,499</span>
+                          <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹2,899/-</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        CMSL, ECIPL, Tax Laws &amp; Practice (All 3 Papers)
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-exec-g2'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-exec-g2'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G2</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Exec Both Groups June 2027 */}
+                    <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-1.5 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#FFE3A0]">Both Groups — JUNE 2027</span>
+                          <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">50% OFF</span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹9,999</span>
+                          <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹5,000/-</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-300 leading-tight">
+                        Complete 7-Paper Dual Group Mastery for June 2027
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-exec-both'))}
+                          className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-exec-both'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy Both</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* COLUMN 3: CS PROFESSIONAL JUNE 2027 (G1, G2, Both) */}
+              <div className="p-5 bg-[#161616] border-2 border-purple-500/40 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      LEVEL 3 • JUNE 2027
+                    </span>
+                    <span className="text-[10px] text-[#FFE3A0] font-semibold">AIR 3 Mentorship</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CS Professional — JUNE 2027</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Direct mentorship by AIR 3 Harkiran Kaur</p>
+                  </div>
+
+                  {/* Sub-options for Prof June 2027 */}
+                  <div className="space-y-2.5">
+                    {/* Prof Group 1 June 2027 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 1 — JUNE 2027</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹7,999</span>
+                          <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹3,499/-</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        ESG, Drafting, Compliance &amp; Elective 1 (4 Papers)
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-prof-g1'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-prof-g1'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G1</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prof Group 2 June 2027 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 2 — JUNE 2027</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹6,999</span>
+                          <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹2,999/-</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        Strategic Mgmt, Restructuring &amp; IBC, Elective 2
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-prof-g2'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-prof-g2'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G2</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prof Both Groups June 2027 */}
+                    <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-1.5 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#FFE3A0]">Both Groups — JUNE 2027</span>
+                          <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">50% OFF</span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-gray-400 line-through">₹11,999</span>
+                          <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹6,000/-</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-300 leading-tight">
+                        All 7 Papers direct master mentorship with AIR 3 Ranker for June 2027
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('june2027-prof-both'))}
+                          className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('june2027-prof-both'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy Both</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* =================== CURRENT SESSION COLUMNS (OCT/DEC 2026) =================== */
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* COLUMN 1: CSEET */}
+              <div className="p-5 bg-[#161616] border border-emerald-500/30 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      Level 1 • Oct 2026
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-semibold">1st Call Free Demo</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CSEET Mentorship</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Complete ICSI Foundation 4-Paper Mentorship</p>
+                  </div>
+
+                  <div className="p-3 bg-black/40 rounded-xl space-y-1.5 text-xs text-gray-300 font-poppins">
+                    <div className="text-[11px] font-bold text-[#C8A45D] uppercase tracking-wider">Subjects Covered:</div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 1: Business Communication</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 2: Fundamentals of Accounting</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 3: Economics &amp; Business Env.</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-gray-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>Paper 4: Business Laws &amp; Management</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-cinzel text-3xl font-black text-[#FFE3A0]">₹1,199/-</span>
+                      <span className="text-xs text-gray-400 line-through">₹2,000</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400">Includes daily study timetable, doubt solving &amp; routine check-ins.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                  <button
+                    onClick={() => addToCart(getProduct('cseet-mentorship'))}
+                    className="py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-montserrat font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#C8A45D]" />
+                    <span>Add to Cart</span>
+                  </button>
+                  <button
+                    onClick={() => buyNow(getProduct('cseet-mentorship'))}
+                    className="py-2.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-montserrat font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 uppercase cursor-pointer hover:brightness-110 shadow-md transition-all"
+                  >
+                    <span>Instant Buy</span>
+                    <Zap className="w-3.5 h-3.5 fill-black" />
+                  </button>
+                </div>
+              </div>
+
+              {/* COLUMN 2: CS EXECUTIVE (Group 1, Group 2, Both Groups) */}
+              <div className="p-5 bg-[#161616] border border-amber-500/30 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      Level 2 • Dec 2026
+                    </span>
+                    <span className="text-[10px] text-[#FFE3A0] font-semibold">Dec '26 Exam Attempt</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CS Executive Mentorship</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Choose your specific group or enroll for both</p>
+                  </div>
+
+                  {/* Sub-options in Executive */}
+                  <div className="space-y-2.5">
+                    {/* Exec Group 1 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 1 (4 Subjects)</span>
+                        <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,999/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-400 leading-tight">
+                        JIGL, Company Law, SBLL, CAFM
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('exec-g1-mentorship'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('exec-g1-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G1</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Exec Group 2 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 2 (3 Subjects)</span>
+                        <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,699/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-400 leading-tight">
+                        CMSL, ECIPL, Tax Laws &amp; Practice
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('exec-g2-mentorship'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('exec-g2-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G2</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Exec Both Groups */}
+                    <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-2 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#FFE3A0]">Both Groups (Whole)</span>
+                          <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">Save ₹449</span>
+                        </div>
+                        <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹3,249/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-300 leading-tight">
+                        Complete 7-Paper Dual Group Mastery &amp; Mock Plan
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('exec-both-mentorship'))}
+                          className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('exec-both-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy Both</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* COLUMN 3: CS PROFESSIONAL (Group 1, Group 2, Both Groups) */}
+              <div className="p-5 bg-[#161616] border border-purple-500/30 rounded-2xl flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-md text-[10px] font-montserrat font-bold uppercase">
+                      Level 3 • AIR 3 Flagship
+                    </span>
+                    <span className="text-[10px] text-[#FFE3A0] font-semibold">Dec '26 Attempt</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel font-bold text-lg text-white">CS Professional Mentorship</h4>
+                    <p className="text-xs text-gray-400 font-poppins">Direct mentorship by AIR 3 Harkiran Kaur</p>
+                  </div>
+
+                  {/* Sub-options in Professional */}
+                  <div className="space-y-2.5">
+                    {/* Prof Group 1 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 1 (4 Subjects)</span>
+                        <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹2,499/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-400 leading-tight">
+                        ESG, Drafting &amp; Pleadings, Compliance &amp; Audit, Elective 1
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('prof-g1-mentorship'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('prof-g1-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G1</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prof Group 2 */}
+                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Group 2 (3 Subjects)</span>
+                        <span className="font-cinzel text-base font-bold text-[#FFE3A0]">₹1,999/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-400 leading-tight">
+                        Strategic Management, Restructuring &amp; IBC, Elective 2
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('prof-g2-mentorship'))}
+                          className="py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('prof-g2-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] to-[#C8A45D] text-black font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy G2</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Prof Both Groups */}
+                    <div className="p-3 bg-gradient-to-r from-[#2A241A] to-[#1C1813] border-2 border-[#C8A45D] rounded-xl space-y-2 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#FFE3A0]">Both Groups (Whole)</span>
+                          <span className="px-1.5 py-0.5 bg-[#C8A45D] text-black text-[9px] font-extrabold rounded">AIR 3 Elite</span>
+                        </div>
+                        <span className="font-cinzel text-lg font-black text-[#FFE3A0]">₹3,999/-</span>
+                      </div>
+                      <p className="text-[10.5px] text-gray-300 leading-tight">
+                        All 7 Papers direct mentorship with AIR 3 Ranker
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart(getProduct('prof-both-mentorship'))}
+                          className="py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-[#C8A45D]" /> Add Both
+                        </button>
+                        <button
+                          onClick={() => buyNow(getProduct('prof-both-mentorship'))}
+                          className="py-1.5 bg-gradient-to-r from-[#FFE3A0] via-[#C8A45D] to-[#DFB96E] text-black font-black rounded-lg text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>Buy Both</span>
+                          <Zap className="w-3 h-3 fill-black" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom Aligned Row: 12th Career Roadmap & Counselling */}
           <div className="pt-4 border-t border-[#C8A45D]/30 space-y-3">

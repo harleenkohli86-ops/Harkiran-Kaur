@@ -141,19 +141,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const cleanInput = emailOrPhone.trim().toLowerCase();
+    const cleanPass = pass.trim();
+    const digits = cleanInput.replace(/\D/g, '');
 
     // 1. Check Master Admin login
-    if (
-      (cleanInput === 'admin@hkcodeofrankers.com' ||
-        cleanInput === 'harkiran@hkcodeofrankers.com' ||
-        cleanInput === 'harleenkohli86@gmail.com') &&
-      (pass === 'Kaur131327' || pass === 'admin123' || pass === 'rankers2026' || pass === 'admin')
-    ) {
+    const isMasterAdminEmailOrPhone =
+      cleanInput === 'admin@hkcodeofrankers.com' ||
+      cleanInput === 'harkiran@hkcodeofrankers.com' ||
+      cleanInput === 'harleenkohli86@gmail.com' ||
+      cleanInput === 'admin' ||
+      digits === '9284084523';
+
+    const isMasterAdminPass =
+      cleanPass === 'Kaur131327' ||
+      cleanPass.toLowerCase() === 'kaur131327' ||
+      cleanPass === 'admin123' ||
+      cleanPass === 'rankers2026' ||
+      cleanPass === 'admin';
+
+    if (isMasterAdminEmailOrPhone && isMasterAdminPass) {
       const adminProfile: UserProfile = {
         id: 'usr_master_admin',
         studentId: 'ADMIN-001',
         fullName: 'Harkiran Kaur Kohli',
-        email: cleanInput,
+        email: cleanInput.includes('@') ? cleanInput : 'harleenkohli86@gmail.com',
         phone: '+91 92840 84523',
         targetExam: 'Master Admin / Head Mentor',
         avatar: 'https://ui-avatars.com/api/?name=Harkiran+Kaur&background=0F0F0F&color=FFE3A0',

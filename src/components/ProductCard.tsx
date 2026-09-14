@@ -75,16 +75,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ? 'from-[#1A1303] via-[#2A1E06] to-[#0F0F0F]'
       : 'from-[#1E0F28] via-[#130B1C] to-[#0F0F0F]';
 
-  const headerTagLabel =
-    product.level === 'cseet'
-      ? 'CSEET 2026 ICSI'
+  const is2027Program =
+    product.id.includes('2027') ||
+    product.name.includes('2027') ||
+    (badgeLabel && badgeLabel.includes('2027')) ||
+    (product.badge && product.badge.includes('2027'));
+
+  const headerTagLabel = is2027Program
+    ? product.level === 'cseet'
+      ? 'CSEET Feb 2027'
       : product.level === 'g1'
-      ? 'CS Exec G1 ICSI'
+      ? 'CS Exec June 2027'
       : product.level === 'g2'
-      ? 'CS Exec G2 ICSI'
+      ? 'CS Exec June 2027'
       : product.level === 'both'
-      ? 'AIR Ranker Batch'
-      : 'Professional Pass';
+      ? (product.id.includes('prof') ? 'CS Prof June 2027' : 'CS Exec June 2027')
+      : 'CS Prof June 2027'
+    : product.level === 'cseet'
+    ? 'CSEET 2026 ICSI'
+    : product.level === 'g1'
+    ? 'CS Exec G1 ICSI'
+    : product.level === 'g2'
+    ? 'CS Exec G2 ICSI'
+    : product.level === 'both'
+    ? 'AIR Ranker Batch'
+    : 'Professional Pass';
 
   return (
     <div
@@ -106,7 +121,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Ribbon Tag Top Right */}
           <div className="absolute top-2 right-2 z-10 bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 text-white font-extrabold text-[9px] uppercase px-2.5 py-0.5 rounded-full shadow-md tracking-wider border border-white/20 flex items-center gap-1 animate-pulse">
             <Zap className="w-2.5 h-2.5 fill-white" />
-            <span>2026 Batch</span>
+            <span>{is2027Program ? '2027 Batch' : '2026 Batch'}</span>
           </div>
 
           {/* Banner Left Side: Bulleted Features */}

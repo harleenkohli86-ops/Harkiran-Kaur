@@ -137,14 +137,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (formatted === 'EARLYBIRD25' || formatted === 'EARLY25' || formatted === 'FIRST10' || formatted === 'EARLYBIRD') {
       return {
         success: false,
-        message: '1st 10 aspirants already claimed their offers! Use code HK5 for 5% OFF or your 15% Ranker code.',
+        message: '1st 10 aspirants already claimed their offers! Use code HK5 or FEB2027 for 5% OFF or your 15% Ranker code.',
       };
-    } else if (formatted === 'NEXT5' || formatted === 'MENTOR5' || formatted === 'NEXTOFFER' || formatted === 'CS5') {
+    } else if (
+      formatted === 'NEXT5' ||
+      formatted === 'MENTOR5' ||
+      formatted === 'NEXTOFFER' ||
+      formatted === 'CS5' ||
+      formatted === 'FEB2027' ||
+      formatted === 'FEB5' ||
+      formatted === 'FEB27' ||
+      formatted === 'JUNE2027' ||
+      formatted === 'JUNE5' ||
+      formatted === 'JUNE27' ||
+      formatted === 'DISCOUNT5'
+    ) {
       setCouponCode(formatted);
       setDiscountPercentage(5);
       return {
         success: true,
-        message: '🎉 5% Mentorship Discount Applied!',
+        message: '🎉 5% Mentorship Discount Applied on selling price!',
       };
     }
     return {

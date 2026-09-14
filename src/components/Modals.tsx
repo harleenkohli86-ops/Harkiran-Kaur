@@ -372,7 +372,7 @@ export const JoinMentorshipModal: React.FC<JoinModalProps> = ({ isOpen, onClose 
                   >
                     <option value="October 2026 (CSEET Attempt)">October 2026 (CSEET Attempt)</option>
                     <option value="December 2026 (CS Executive / Professional)">December 2026 (CS Executive / Professional)</option>
-                    <option value="June 2027">June 2027</option>
+                    <option value="February 2027">February 2027</option>
                   </select>
                 </div>
               </div>
